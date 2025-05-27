@@ -69,7 +69,7 @@ router.post('/userReg', async (req, res) => {
 });
 
 // Get all users
-router.post('/users/login', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {

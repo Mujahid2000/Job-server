@@ -465,7 +465,27 @@ router.get('/getCompanyData', async (req, res) => {
       from: "companydatas",
       localField: "userId",
       foreignField: "userId",
-      as: "companyData"
+      as: "company"
+    }
+  },
+  {
+    $unwind: {
+      path: "$company",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $lookup: {
+      from: "contacts",
+      localField: "userId",
+      foreignField: "userId",
+      as: "contactInfo"
+    }
+  },
+  {
+    $unwind: {
+      path: "$contactInfo",
+      preserveNullAndEmptyArrays: true
     }
   },
   {
@@ -477,49 +497,33 @@ router.get('/getCompanyData', async (req, res) => {
     }
   },
   {
-    $match: {
-      postedDate: { $gte: new Date() }
-    }
-  },
-  {
     $unwind: {
       path: "$founding",
-      preserveNullAndEmptyArrays: true // Keep documents even if no founderinfos match
+      preserveNullAndEmptyArrays: true
     }
   },
   {
     $group: {
-      _id: null,
-      totalCount: { $sum: 1 },
-      jobs: { $push: "$$ROOT" }
-    }
-  },
-  {
-    $unwind: "$jobs"
-  },
-  {
-    $set: {
-      companyName: {
-        $ifNull: [{ $arrayElemAt: ["$jobs.companyData.companyName", 0] }, "Unknown"]
-      },
-      logo: {
-        $ifNull: [{ $arrayElemAt: ["$jobs.companyData.logo", 0] }, ""]
-      },
-      organizationType: {
-        $ifNull: ["$jobs.founding.organizationType", null] // Set organizationType from founding
-      }
+      _id: "$userId",
+      totalCompanyJobs: { $sum: 1 },
+      companyName: { $first: "$company.companyName" },
+      logo: { $first: "$company.logo" },
+      location: { $first: "$contactInfo.mapLocation" },
+      organizationType: { $first: "$founding.organizationType" },
+      latestJob: { $first: "$$ROOT" } // get one example job for context
     }
   },
   {
     $replaceRoot: {
       newRoot: {
         $mergeObjects: [
-          "$jobs",
+          "$latestJob",
           {
-            totalUpcomingCount: "$totalCount",
             companyName: "$companyName",
             logo: "$logo",
-            organizationType: "$organizationType"
+            location: "$location",
+            organizationType: "$organizationType",
+            totalCompanyJobs: "$totalCompanyJobs"
           }
         ]
       }
@@ -527,20 +531,22 @@ router.get('/getCompanyData', async (req, res) => {
   },
   {
     $project: {
-      _id: 1,
-      title: 1,
-      tags: 1,
-      location: 1,
-      jobRole: 1,
-      postedDate: 1,
+      _id: 0,
       companyName: 1,
       logo: 1,
-      totalUpcomingCount: 1,
+      location: 1,
+      totalCompanyJobs: 1,
+      title: 1,
+      tags: 1,
+      jobRole: 1,
+      postedDate: 1,
       organizationType: 1,
-      userId: 1
+      userId: 1,
+      "_id": 1,
     }
   }
 ]
+
 );
 
     res.status(200).json({

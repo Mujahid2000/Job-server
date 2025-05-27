@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const JobAppliedSchema = require('../models/AppliedDataSchema');
 const Bookmark = require('../models/BookMarksModel');
+const ApplicantModels = require('../models/ApplicantModels');
 const router = express.Router();
 
 // GET /candidateApplyJobList/:userId
@@ -193,6 +194,66 @@ router.get('/candidateFavoriteJobList/:email', async (req, res) => {
     console.error("Error fetching favorite job list:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+
+
+router.get('/candidateList', async (req, res) => {
+    try {
+        const candidateList = await ApplicantModels.aggregate([
+            {
+                $lookup: {
+                    from: "personaldatas",
+                    localField: "userId",
+                    foreignField: "userId",
+                    as: "profiledata",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$profiledata",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: "contacts",
+                    localField: "userId",
+                    foreignField: "userId",
+                    as: "contact",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$contact",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $set: {
+                    education: "$profiledata.education",
+                    gender: "$profiledata.gender",
+                    location: "$contact.mapLocation",
+                },
+            },
+            {
+                $project: {
+                    profilePicture: 1,
+                    location: 1,
+                    gender: 1,
+                    fullName: 1,
+                    title: 1,
+                    education: 1,
+                    experience: 1,
+                },
+            },
+        ]);
+
+        res.status(200).json({ success: true, data: candidateList });
+    } catch (err) {
+        console.error("Error fetching candidate list:", err);
+        res.status(500).json({ error: "Internal Server Error" }); // Example error response
+    }
 });
 
 module.exports = router;
