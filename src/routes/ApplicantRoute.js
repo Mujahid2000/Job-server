@@ -323,32 +323,135 @@ router.patch('/updatePassword/:userId', async (req, res) => {
 });
 
 
-// router.put('/applicant/:id', async (req, res) => {
-  //     try {
-//         const updatedApplicant = await ApplicantModel.findByIdAndUpdate(
-//             req.params.id,
-//             req.body,
-//             { new: true, runValidators: true }
-//         );
-//         if (!updatedApplicant) {
-//             return res.status(404).json({ message: 'Applicant not found' });
-//         }
-//         res.status(200).json({ message: 'Applicant updated successfully', applicant: updatedApplicant });
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error updating applicant', error: error.message });
-//     }
-// });
+router.get('/profileComplete/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+console.log(userId);
+    const profileData = await ApplicantModel.aggregate([
+      {
+        $match: {
+          userId: userId, // No need for template string here
+        },
+      },
+      {
+        $lookup: {
+          from: "personaldatas",
+          localField: "userId",
+          foreignField: "userId",
+          as: "personal",
+        },
+      },
+      {
+        $unwind: {
+          path: "$personal",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "contacts",
+          localField: "userId",
+          foreignField: "userId",
+          as: "contact",
+        },
+      },
+      {
+        $unwind: {
+          path: "$contact",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "socialmediainfos",
+          localField: "userId",
+          foreignField: "userId",
+          as: "socialMedia",
+        },
+      },
+      {
+        $unwind: {
+          path: "$socialMedia",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $set: {
+          social: "$socialMedia.socialLinks",
+          location: "$contact.mapLocation",
+          email: "$contact.email",
+          phoneNumber: "$contact.phoneNumber",
+          country: "$personal.country",
+          education: "$personal.education",
+          experience: "$personal.experience",
+          dateOfBirth: "$personal.dateOfBirth",
+          gender: "$personal.gender",
+          maritalStatus: "$personal.maritalStatus",
+          biography: "$personal.biography",
+        },
+      },
+      {
+        $addFields: {
+          message: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$social", null] },
+                  { $eq: ["$location", null] },
+                  { $eq: ["$email", null] },
+                  { $eq: ["$phoneNumber", null] },
+                  { $eq: ["$education", null] },
+                  { $eq: ["$experience", null] },
+                  { $eq: ["$dateOfBirth", null] },
+                  { $eq: ["$gender", null] },
+                  { $eq: ["$maritalStatus", null] },
+                  { $eq: ["$biography", null] },
+                ],
+              },
+              then: "Please!!! complete your profile",
+              else: "Profile is complete",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: 1,
+          social: 1,
+          location: 1,
+          email: 1,
+          phoneNumber: 1,
+          country: 1,
+          education: 1,
+          experience: 1,
+          dateOfBirth: 1,
+          gender: 1,
+          maritalStatus: 1,
+          biography: 1,
+          message: 1,
+        },
+      },
+    ]);
 
-// router.delete('/applicant/:id', async (req, res) => {
-//     try {
-//         const deletedApplicant = await ApplicantModel.findByIdAndDelete(req.params.id);
-//         if (!deletedApplicant) {
-//             return res.status(404).json({ message: 'Applicant not found' });
-//         }
-//         res.status(200).json({ message: 'Applicant deleted successfully' });
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error deleting applicant', error: error.message });
-//     }
-// });
+    // Return first (and likely only) result
+    const result = profileData[0];
+
+    if (!result) {
+      return res.status(404).json({ message: 'User not found or no data available.' });
+    }
+
+    res.status(200).json({
+      message: result.message,
+      data: result,
+    });
+
+  } catch (error) {
+    console.error('Error checking profile completeness:', error);
+    res.status(500).json({ message: 'Error checking profile completeness', error: error.message });
+  }
+});
+
+
 
 module.exports = router;
