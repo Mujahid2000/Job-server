@@ -201,53 +201,65 @@ router.get('/candidateFavoriteJobList/:email', async (req, res) => {
 router.get('/candidateList', async (req, res) => {
     try {
         const candidateList = await ApplicantModels.aggregate([
-            {
-                $lookup: {
-                    from: "personaldatas",
-                    localField: "userId",
-                    foreignField: "userId",
-                    as: "profiledata",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$profiledata",
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $lookup: {
-                    from: "contacts",
-                    localField: "userId",
-                    foreignField: "userId",
-                    as: "contact",
-                },
-            },
-            {
-                $unwind: {
-                    path: "$contact",
-                    preserveNullAndEmptyArrays: true,
-                },
-            },
-            {
-                $set: {
-                    education: "$profiledata.education",
-                    gender: "$profiledata.gender",
-                    location: "$contact.mapLocation",
-                },
-            },
-            {
-                $project: {
-                    profilePicture: 1,
-                    location: 1,
-                    gender: 1,
-                    fullName: 1,
-                    title: 1,
-                    education: 1,
-                    experience: 1,
-                },
-            },
-        ]);
+  {
+    $lookup: {
+      from: "personaldatas",
+      localField: "userId",
+      foreignField: "userId",
+      as: "profiledata",
+    },
+  },
+  {
+    $unwind: {
+      path: "$profiledata",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $lookup: {
+      from: "contacts",
+      localField: "userId",
+      foreignField: "userId",
+      as: "contact",
+    },
+  },
+  {
+    $unwind: {
+      path: "$contact",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $lookup: {
+      from: "resumecollections",
+      localField: "userId",
+      foreignField: "userId",
+      as: "resume",
+    },
+  },
+
+  {
+    $set: {
+      education: "$profiledata.education",
+      gender: "$profiledata.gender",
+      location: "$contact.mapLocation",
+      resume_Id: "$resume._id",
+    },
+  },
+  {
+    $project: {
+      profilePicture: 1,
+      location: 1,
+      gender: 1,
+      fullName: 1,
+      title: 1,
+      education: 1,
+      experience: 1,
+      resume_Id: 1,
+      userId: 1,
+    },
+  },
+]);
 
         res.status(200).json({ success: true, data: candidateList });
     } catch (err) {
