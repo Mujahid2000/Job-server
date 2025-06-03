@@ -1,18 +1,21 @@
 const express = require('express');
 const NotificationSchemas = require('../models/NotificationSchema');
+const SaveNotificationSchema = require('../models/SaveNotificationSchema');
+
 const router = express.Router();
 
-// POST endpoint to send notifications
-router.post('/send', async (req, res) => {
-  const { io } = req; // Get io from request object
+/**
+ * Shared handler to send notification
+ */
+const handleNotification = async (req, res, type) => {
+  const { io } = req;
   const { id, companyUser, applicantId, jobId, message, Name } = req.body;
 
-  // Validate request body
+  // Validate required fields
   if (!id || !companyUser || !applicantId || !jobId || !message) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  // Create notification object
   const notification = {
     id,
     companyUser,
@@ -21,79 +24,47 @@ router.post('/send', async (req, res) => {
     message,
     Name,
     timestamp: new Date().toISOString(),
+    type,
   };
 
   try {
-    // Check notification status in database
-    const checkNotificationStatus = await NotificationSchemas.findOne({ userId: applicantId });
+    const userNotificationStatus = await NotificationSchemas.findOne({ userId: applicantId });
 
-    if (!checkNotificationStatus) {
+    if (!userNotificationStatus) {
       return res.status(404).json({ error: 'No notification record found for this user' });
     }
 
-    if (checkNotificationStatus.shortlist !== true) {
-      return res.status(200).json({ message: 'Notification not sent: User is not shortlisted' });
+    // Check eligibility based on notification type
+    const isAllowed =
+      type === 'shortlist'
+        ? userNotificationStatus.shortlist
+        : userNotificationStatus.savedProfile;
+
+    if (!isAllowed) {
+      return res.status(200).json({ message: `Notification not sent: User is not eligible for ${type}` });
     }
 
-    // Save notification to database
-    // await NotificationSchemas.create(notification);
+    // Save to appropriate schema
+    await SaveNotificationSchema.create(notification);
 
-    // Emit notification to specific user via Socket.IO
+    // Emit via socket
     io.to(applicantId).emit('receiveNotification', notification);
 
-    // Respond to the client
-    res.status(200).json({ message: 'Notification sent successfully', notification });
+    return res.status(200).json({ message: 'Notification sent successfully', notification });
   } catch (error) {
-    console.error('Error sending notification:', error);
-    res.status(500).json({ error: 'Failed to send notification' });
+    console.error(`Error sending ${type} notification:`, error);
+    return res.status(500).json({ error: `Failed to send ${type} notification` });
   }
+};
+
+// POST: Shortlist Notification
+router.post('/send', async (req, res) => {
+  await handleNotification(req, res, 'shortlist');
 });
 
-
+// POST: Saved Profile Notification
 router.post('/sendSavedProfile', async (req, res) => {
-  const { io } = req; // Get io from request object
-  const { id, companyUser, applicantId, jobId, message, Name } = req.body;
-
-  // Validate request body
-  if (!id || !companyUser || !applicantId || !jobId || !message) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // Create notification object
-  const notification = {
-    id,
-    companyUser,
-    applicantId,
-    jobId,
-    message,
-    Name,
-    timestamp: new Date().toISOString(),
-  };
-
-  try {
-    // Check notification status in database
-    const checkNotificationStatus = await NotificationSchemas.findOne({ userId: applicantId });
-
-    if (!checkNotificationStatus) {
-      return res.status(404).json({ error: 'No notification record found for this user' });
-    }
-
-    if (checkNotificationStatus.savedProfile !== true) {
-      return res.status(200).json({ message: 'Notification not sent: User is not shortlisted' });
-    }
-
-    // Save notification to database
-    // await NotificationSchemas.create(notification);
-
-    // Emit notification to specific user via Socket.IO
-    io.to(applicantId).emit('receiveNotification', notification);
-
-    // Respond to the client
-    res.status(200).json({ message: 'Notification sent successfully', notification });
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    res.status(500).json({ error: 'Failed to send notification' });
-  }
+  await handleNotification(req, res, 'savedProfile');
 });
 
 module.exports = router;
