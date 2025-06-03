@@ -14,7 +14,7 @@ const AppliedJobs = require('./routes/AppliedJobsRoute');
 const shortList = require('./routes/ShortListedRoute');
 const candidateRoute = require('./routes/CandidateRoute');
 const liveNotification = require('./routes/LiveNotification');
-
+const notificationData = require('./routes/NotificationData')
 // Load environment variables
 dotenv.config();
 const allowedOrigins = process.env.NODE_ENV === 'production' 
@@ -66,7 +66,7 @@ app.use('/appliedJobs', AppliedJobs);
 app.use('/shortList', shortList);
 app.use('/candidateJobApplyData', candidateRoute);
 app.use('/liveNotification', liveNotification);
-
+app.use('/notification', notificationData)
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

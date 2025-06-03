@@ -23,11 +23,15 @@ const saveNotificationSchema = new mongoose.Schema({
   },
   Name: {
     type: String,
-    required: false,
+    required: true,
   },
   type: {
     type: String,
     required: true,
+  },
+  isRead: {
+    type: Boolean,
+    required: true
   },
   timestamp: {
     type: Date,
