@@ -117,74 +117,133 @@ router.get('/getJobApplicantData/:jobId', async (req, res) => {
     }
 
     const data = await JobAppliedSchema.aggregate([
-      {
-        $match: {
-          jobId: jobId
-        }
+  {
+    $match: {
+      jobId: `${jobId}`,
+    },
+  },
+  {
+    $lookup: {
+      from: "applicants",
+      localField: "userId",
+      foreignField: "userId",
+      as: "applicantsLists",
+    },
+  },
+  {
+    $unwind: {
+      path: "$applicantsLists",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $lookup: {
+      from: "jobpostingcollections",
+      let: { jobIdStr: "$jobId" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: [
+                "$_id",
+                { $toObjectId: "$$jobIdStr" },
+              ],
+            },
+          },
+        },
+      ],
+      as: "jobDetails",
+    },
+  },
+  {
+    $unwind: {
+      path: "$jobDetails",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    // ✅ Use a pipeline lookup to compare jobDetails.userId with company userId
+    $lookup: {
+      from: "companydatas",
+      let: {
+        companyUserId: "$jobDetails.userId",
       },
-      {
-        $lookup: {
-          from: 'applicants',
-          localField: 'userId',
-          foreignField: 'userId',
-          as: 'applicantsLists'
-        }
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ["$userId", "$$companyUserId"],
+            },
+          },
+        },
+      ],
+      as: "company",
+    },
+  },
+  {
+    $unwind: {
+      path: "$company",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $lookup: {
+      from: "resumecollections",
+      let: { resumeIdStr: "$resume_Id" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: [
+                { $toString: "$_id" },
+                "$$resumeIdStr",
+              ],
+            },
+          },
+        },
+      ],
+      as: "resumeDetails",
+    },
+  },
+  {
+    $unwind: {
+      path: "$resumeDetails",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $set: {
+      profilePicture:
+        "$applicantsLists.profilePicture",
+      experience: "$applicantsLists.experience",
+      education: "$applicantsLists.education",
+      fullName: "$applicantsLists.fullName",
+      title: "$applicantsLists.title",
+      resumeLink: "$resumeDetails.resumeUrl",
+      resume_Id: {
+        $toString: "$resumeDetails._id",
       },
-      {
-        $unwind: {
-          path: '$applicantsLists',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $lookup: {
-          from: 'resumecollections',
-          let: { resumeIdStr: '$resume_Id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: [{ $toString: '$_id' }, '$$resumeIdStr']
-                }
-              }
-            }
-          ],
-          as: 'result'
-        }
-      },
-      {
-        $unwind: {
-          path: '$result',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $set: {
-          profilePicture: '$applicantsLists.profilePicture',
-          experience: '$applicantsLists.experience',
-          education: '$applicantsLists.education',
-          fullName: '$applicantsLists.fullName',
-          title: '$applicantsLists.title',
-          resumeLink: '$result.resumeUrl',
-          resume_Id: { $toString: '$result._id' },
-          
-        }
-      },
-      {
-        $project: {
-          profilePicture: 1,
-          experience: 1,
-          education: 1,
-          fullName: 1,
-          title: 1,
-          date: 1,
-          resumeLink: 1,
-          userId: 1,
-          resume_Id: 1,
-          jobId:1
-        }
-      }
-    ]);
+      companyUserId: "$jobDetails.userId", // ✅ Renamed
+      companyName: "$company.companyName",
+    },
+  },
+  {
+    $project: {
+      profilePicture: 1,
+      experience: 1,
+      education: 1,
+      fullName: 1,
+      title: 1,
+      date: 1,
+      resumeLink: 1,
+      userId: 1,
+      resume_Id: 1,
+      jobId: 1,
+      companyUserId: 1,
+      companyName: 1,
+    },
+  },
+]);
 
     res.status(200).json({ success: true, data });
   } catch (error) {
