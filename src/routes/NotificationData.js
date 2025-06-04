@@ -39,7 +39,7 @@ router.get('/notificationData/:userId', async (req, res) => {
       Name: 1,
       companyUser: 1,
       companyName: 1,
-      timestamp:1
+      time:1
     },
   },
 ]);
