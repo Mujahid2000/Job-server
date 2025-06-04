@@ -34,10 +34,10 @@ const saveNotificationSchema = new mongoose.Schema({
     required: true,
     default: false
   },
-  timestamp: {
+  time: {
     type: Date,
     default: new Date(),
   },
-}, { timestamps: true });
+});
 
 module.exports = mongoose.model('SaveNotification', saveNotificationSchema);
