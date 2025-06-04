@@ -108,107 +108,111 @@ router.get("/getUserJobPostData/:userId", async (req, res) => {
   }
 });
 
-router.get('/getJobDataWithJobCount', async (req, res) =>{
-  const getJobData = await JobPosting.aggregate([
-  {
-    // Convert _id (ObjectId) to string for matching against string jobId
-    $addFields: {
-      jobIdStr: { $toString: "$_id" },
-    },
-  },
-  {
-    // Lookup promoted jobs
-    $lookup: {
-      from: "promotedlists",
-      localField: "jobIdStr",
-      foreignField: "jobId",
-      as: "promoted",
-    },
-  },
-  {
-    // Unwind promoted to simplify access; preserve documents without promotion
-    $unwind: {
-      path: "$promoted",
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    // Lookup company info
-    $lookup: {
-      from: "companydatas",
-      localField: "userId",
-      foreignField: "userId",
-      as: "company",
-    },
-  },
-  {
-    $unwind: {
-      path: "$company",
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    // Set company-related fields
-    $set: {
-      logo: "$company.logo",
-      companyName: "$company.companyName",
-    },
-  },
-  {
-    // Lookup job applications
-    $lookup: {
-      from: "jobapplydatas",
-      let: { jobIdStr: "$jobIdStr" },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ["$jobId", "$$jobIdStr"],
-            },
-          },
-        },
-      ],
-      as: "applications",
-    },
-  },
-  {
-    // Add application count and featured flag
-    $addFields: {
-      applicationCount: {
-        $size: "$applications",
+router.get('/getJobDataWithJobCount', async (req, res) => {
+  try {
+    const jobData = await JobPosting.aggregate([
+      {
+        $addFields: {
+          jobIdStr: { $toString: "$_id" }
+        }
       },
-      Featured: {
-        $cond: {
-          if: {
-            $ifNull: ["$promoted._id", false],
-          },
-          then: "featured",
-          else: null,
-        },
+      {
+        $lookup: {
+          from: "promotedlists",
+          localField: "jobIdStr",
+          foreignField: "jobId",
+          as: "promoted"
+        }
       },
-    },
-  },
-  {
-    // Final projection
-    $project: {
-      logo: 1,
-      title: 1,
-      location: 1,
-      userId: 1,
-      salaryType: 1,
-      minSalary: 1,
-      maxSalary: 1,
-      jobType: 1,
-      applicationCount: 1,
-      status: 1,
-      companyName: 1,
-      tags: 1,
-      postedDate: 1,
-      Featured: 1,
-    },
-  },
-])
-})
+      {
+        $unwind: {
+          path: "$promoted",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "companydatas",
+          localField: "userId",
+          foreignField: "userId",
+          as: "company"
+        }
+      },
+      {
+        $unwind: {
+          path: "$company",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $set: {
+          logo: "$company.logo",
+          companyName: "$company.companyName"
+        }
+      },
+      {
+        $lookup: {
+          from: "jobapplydatas",
+          let: { jobIdStr: "$jobIdStr" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$jobId", "$$jobIdStr"]
+                }
+              }
+            }
+          ],
+          as: "applications"
+        }
+      },
+      {
+        $addFields: {
+          applicationCount: { $size: "$applications" },
+          Featured: {
+            $cond: {
+              if: { $ifNull: ["$promoted._id", false] },
+              then: "featured",
+              else: null
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          logo: 1,
+          title: 1,
+          location: 1,
+          userId: 1,
+          salaryType: 1,
+          minSalary: 1,
+          maxSalary: 1,
+          jobType: 1,
+          applicationCount: 1,
+          status: 1,
+          companyName: 1,
+          tags: 1,
+          postedDate: 1,
+          Featured: 1
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: jobData.length,
+      data: jobData
+    });
+  } catch (error) {
+    console.error("Error in /getJobDataWithJobCount:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message
+    });
+  }
+});
+
 
 router.get('/getJobApplicantData/:jobId', async (req, res) => {
   const { jobId } = req.params;
