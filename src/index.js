@@ -30,7 +30,7 @@ const io = new Server(server, {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type'],
-    credentials: true,
+    credentials: false,
     transports: ['websocket', 'polling']
   },
 });
@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 // Middleware
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true,
+  credentials: false,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
