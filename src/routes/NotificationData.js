@@ -1,6 +1,5 @@
 const express = require('express');
 const SaveNotificationSchema = require('../models/SaveNotificationSchema');
-
 const router = express.Router();
 
 router.get('/notificationData/:userId', async (req, res) => {
