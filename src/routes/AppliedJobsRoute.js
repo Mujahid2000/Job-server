@@ -108,6 +108,107 @@ router.get("/getUserJobPostData/:userId", async (req, res) => {
   }
 });
 
+router.get('/getJobDataWithJobCount', async (req, res) =>{
+  const getJobData = await JobPosting.aggregate([
+  {
+    // Convert _id (ObjectId) to string for matching against string jobId
+    $addFields: {
+      jobIdStr: { $toString: "$_id" },
+    },
+  },
+  {
+    // Lookup promoted jobs
+    $lookup: {
+      from: "promotedlists",
+      localField: "jobIdStr",
+      foreignField: "jobId",
+      as: "promoted",
+    },
+  },
+  {
+    // Unwind promoted to simplify access; preserve documents without promotion
+    $unwind: {
+      path: "$promoted",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    // Lookup company info
+    $lookup: {
+      from: "companydatas",
+      localField: "userId",
+      foreignField: "userId",
+      as: "company",
+    },
+  },
+  {
+    $unwind: {
+      path: "$company",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    // Set company-related fields
+    $set: {
+      logo: "$company.logo",
+      companyName: "$company.companyName",
+    },
+  },
+  {
+    // Lookup job applications
+    $lookup: {
+      from: "jobapplydatas",
+      let: { jobIdStr: "$jobIdStr" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ["$jobId", "$$jobIdStr"],
+            },
+          },
+        },
+      ],
+      as: "applications",
+    },
+  },
+  {
+    // Add application count and featured flag
+    $addFields: {
+      applicationCount: {
+        $size: "$applications",
+      },
+      Featured: {
+        $cond: {
+          if: {
+            $ifNull: ["$promoted._id", false],
+          },
+          then: "featured",
+          else: null,
+        },
+      },
+    },
+  },
+  {
+    // Final projection
+    $project: {
+      logo: 1,
+      title: 1,
+      location: 1,
+      userId: 1,
+      salaryType: 1,
+      minSalary: 1,
+      maxSalary: 1,
+      jobType: 1,
+      applicationCount: 1,
+      status: 1,
+      companyName: 1,
+      tags: 1,
+      postedDate: 1,
+      Featured: 1,
+    },
+  },
+])
+})
 
 router.get('/getJobApplicantData/:jobId', async (req, res) => {
   const { jobId } = req.params;
