@@ -3,23 +3,6 @@ const NotificationSchemas = require('../models/NotificationSchema');
 const SaveNotificationSchema = require('../models/SaveNotificationSchema');
 
 const router = express.Router();
-function formatDate(date) {
-    const day = date.getDate();
-    const suffix = (d) => {
-        if (d > 3 && d < 21) return 'th';
-        switch (d % 10) {
-            case 1:  return 'st';
-            case 2:  return 'nd';
-            case 3:  return 'rd';
-            default: return 'th';
-        }
-    };
-    const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-    return `${day}${suffix(day)} ${months[date.getMonth()]}, ${date.getFullYear()}`;
-}
 
 /**
  * Shared handler to send notification
@@ -40,7 +23,7 @@ const handleNotification = async (req, res, type) => {
     jobId,
     message,
     Name,
-    timestamp: () => formatDate(new Date()),
+    timestamp: new Date(),
     type,
   };
 
