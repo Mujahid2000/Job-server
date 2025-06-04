@@ -23,7 +23,7 @@ const handleNotification = async (req, res, type) => {
     jobId,
     message,
     Name,
-    timestamp: new Date(),
+    time: new Date(),
     type,
   };
 
