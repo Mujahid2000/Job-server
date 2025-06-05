@@ -666,39 +666,46 @@ try {
 })
 
 
-router.get('/getSpecificCompanyData/:companyId', async (req, res) =>{
+router.get('/getSpecificCompanyData/:companyId', async (req, res) => {
   try {
-    const {companyId} = req.params;
-    const getSpecificCompanyData = await JobPosting.aggregate([
-  {
-    $match: {
-      userId: `${companyId}`,
-    },
-  },
-  {
-    $project: {
-      title: 1,
-      jobRole: 1,
-      minSalary: 1,
-      maxSalary: 1,
-      location: 1,
-      jobType: 1,
-      biography: 1,
-      _id: 1,
-    },
-  },
-]);
-    if(!getSpecificCompanyData){
-      res.status(400).json({message: "Job data not found"})
+    const { companyId } = req.params;
+
+    // Validate companyId (example: ensure it's a non-empty string or ObjectId)
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required' });
     }
 
-    res.status(200).json({message:"data Found", data:getSpecificCompanyData})
+    const getSpecificCompanyData = await JobPosting.aggregate([
+      {
+        $match: {
+          userId: companyId, // Using companyId directly (assuming userId is the correct field)
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          jobRole: 1,
+          minSalary: 1,
+          maxSalary: 1,
+          location: 1,
+          jobType: 1,
+          biography: 1,
+          _id: 1,
+        },
+      },
+    ]);
+
+    // Check if data is found
+    if (getSpecificCompanyData.length === 0) {
+      return res.status(404).json({ message: 'Job data not found' });
+    }
+
+    // Return success response
+    res.status(200).json({ message: 'Data found', data: getSpecificCompanyData });
   } catch (error) {
     console.error('Aggregation error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-})
-
-
+});
 
 module.exports = router;
