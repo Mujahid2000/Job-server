@@ -4,6 +4,7 @@ const CompanyModel = require('../models/CompanyModel');
 const FounderInfo = require('../models/FounderInfoModel');
 const SocialMedia = require('../models/SocialMediaModel');
 const LastContact = require('../models/ContactSchema');
+const JobPosting = require('../models/JobApplicationModels');
 
 router.get('/companyDataById/:id', async (req, res) => {
     const id = req.params.id; // Extract id as a string
@@ -120,6 +121,125 @@ router.get('/companyContacts/:userId', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: 'Server error', error: error.message });
     }
+});
+
+router.get('/getCompanyDataForHome', async (req, res) => {
+  try {
+    const getCompanyProfile = await JobPosting.aggregate([
+      // Lookup from companydatas
+      {
+        $lookup: {
+          from: "companydatas",
+          localField: "userId",
+          foreignField: "userId",
+          as: "company"
+        }
+      },
+      {
+        $unwind: {
+          path: "$company",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // Lookup from contacts
+      {
+        $lookup: {
+          from: "contacts",
+          localField: "userId",
+          foreignField: "userId",
+          as: "contactInfo"
+        }
+      },
+      {
+        $unwind: {
+          path: "$contactInfo",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // Lookup from founderinfos
+      {
+        $lookup: {
+          from: "founderinfos",
+          localField: "userId",
+          foreignField: "userId",
+          as: "founding"
+        }
+      },
+      {
+        $unwind: {
+          path: "$founding",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
+      // Group by userId to aggregate
+      {
+        $group: {
+          _id: "$userId",
+          totalCompanyJobs: { $sum: 1 },
+          companyName: { $first: "$company.companyName" },
+          logo: { $first: "$company.logo" },
+          location: { $first: "$contactInfo.mapLocation" },
+          organizationType: { $first: "$founding.organizationType" },
+          industryType: { $first: "$founding.industryTypes" },
+          latestJob: { $first: "$$ROOT" }
+        }
+      },
+
+      // Merge fields with latestJob
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              "$latestJob",
+              {
+                companyName: "$companyName",
+                logo: "$logo",
+                location: "$location",
+                organizationType: "$organizationType",
+                industryType: "$industryType",
+                totalCompanyJobs: "$totalCompanyJobs"
+              }
+            ]
+          }
+        }
+      },
+
+      // Final projection
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          companyName: 1,
+          logo: 1,
+          location: 1,
+          totalCompanyJobs: 1,
+          title: 1,
+          tags: 1,
+          jobRole: 1,
+          postedDate: 1,
+          organizationType: 1,
+          industryType: 1
+        }
+      }
+    ]);
+
+    // Success response
+    res.status(200).json({
+      success: true,
+      data: getCompanyProfile
+    });
+
+  } catch (error) {
+    console.error("Error fetching company data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error. Unable to fetch company data.",
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;
