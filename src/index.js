@@ -19,7 +19,7 @@ const notificationData = require('./routes/NotificationData')
 dotenv.config();
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? [process.env.FRONTEND_URL] 
-  : ['http://localhost:3000', 'https://myjob-9ubh.onrender.com'];
+  : ['http://localhost:3000', 'https://my-job-brown.vercel.app'];
 // Initialize Express app
 const app = express();
 const http = require('http');
