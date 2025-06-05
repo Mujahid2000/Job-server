@@ -200,7 +200,8 @@ router.get('/getCompanyDataForHome', async (req, res) => {
                 location: "$location",
                 organizationType: "$organizationType",
                 industryType: "$industryType",
-                totalCompanyJobs: "$totalCompanyJobs"
+                totalCompanyJobs: "$totalCompanyJobs",
+                 featured: "featured"
               }
             ]
           }
@@ -221,7 +222,8 @@ router.get('/getCompanyDataForHome', async (req, res) => {
           jobRole: 1,
           postedDate: 1,
           organizationType: 1,
-          industryType: 1
+          industryType: 1,
+          featured: 1
         }
       }
     ]);
