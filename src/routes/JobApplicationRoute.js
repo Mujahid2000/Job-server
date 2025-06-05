@@ -665,4 +665,40 @@ try {
 
 })
 
+
+router.get('/getSpecificCompanyData/:companyId', async (req, res) =>{
+  try {
+    const {companyId} = req.params;
+    const getSpecificCompanyData = await JobPosting.aggregate([
+  {
+    $match: {
+      userId: `${companyId}`,
+    },
+  },
+  {
+    $project: {
+      title: 1,
+      jobRole: 1,
+      minSalary: 1,
+      maxSalary: 1,
+      location: 1,
+      jobType: 1,
+      biography: 1,
+      _id: 1,
+    },
+  },
+]);
+    if(!getSpecificCompanyData){
+      res.status(400).json({message: "Job data not found"})
+    }
+
+    res.status(200).json({message:"data Found", data:getSpecificCompanyData})
+  } catch (error) {
+    console.error('Aggregation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+})
+
+
+
 module.exports = router;
