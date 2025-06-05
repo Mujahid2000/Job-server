@@ -208,7 +208,7 @@ router.get('/getCompanyDataForHome', async (req, res) => {
             logo: "$logo",
             location: "$location",
             organizationType: "$organizationType",
-            industryType: "$industryType", // 👈 Added this
+            industryType: "$industryType", 
             totalCompanyJobs: "$totalCompanyJobs",
             employee: "$employee",
             featured: "featured",
