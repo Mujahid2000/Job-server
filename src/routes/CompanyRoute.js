@@ -126,107 +126,118 @@ router.get('/companyContacts/:userId', async (req, res) => {
 router.get('/getCompanyDataForHome', async (req, res) => {
   try {
     const getCompanyProfile = await JobPosting.aggregate([
-      // Lookup from companydatas
-      {
-        $lookup: {
-          from: "companydatas",
-          localField: "userId",
-          foreignField: "userId",
-          as: "company"
-        }
-      },
-      {
-        $unwind: {
-          path: "$company",
-          preserveNullAndEmptyArrays: true
-        }
-      },
+  // Lookup from companydatas
+  {
+    $lookup: {
+      from: "companydatas",
+      localField: "userId",
+      foreignField: "userId",
+      as: "company",
+    },
+  },
+  {
+    $unwind: {
+      path: "$company",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
 
-      // Lookup from contacts
-      {
-        $lookup: {
-          from: "contacts",
-          localField: "userId",
-          foreignField: "userId",
-          as: "contactInfo"
-        }
-      },
-      {
-        $unwind: {
-          path: "$contactInfo",
-          preserveNullAndEmptyArrays: true
-        }
-      },
+  // Lookup from contacts
+  {
+    $lookup: {
+      from: "contacts",
+      localField: "userId",
+      foreignField: "userId",
+      as: "contactInfo",
+    },
+  },
+  {
+    $unwind: {
+      path: "$contactInfo",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
 
-      // Lookup from founderinfos
-      {
-        $lookup: {
-          from: "founderinfos",
-          localField: "userId",
-          foreignField: "userId",
-          as: "founding"
-        }
-      },
-      {
-        $unwind: {
-          path: "$founding",
-          preserveNullAndEmptyArrays: true
-        }
-      },
+  // Lookup from founderinfos
+  {
+    $lookup: {
+      from: "founderinfos",
+      localField: "userId",
+      foreignField: "userId",
+      as: "founding",
+    },
+  },
+  {
+    $unwind: {
+      path: "$founding",
+      preserveNullAndEmptyArrays: true,
+    },
+  },
 
-      // Group by userId to aggregate
-      {
-        $group: {
-          _id: "$userId",
-          totalCompanyJobs: { $sum: 1 },
-          companyName: { $first: "$company.companyName" },
-          logo: { $first: "$company.logo" },
-          location: { $first: "$contactInfo.mapLocation" },
-          organizationType: { $first: "$founding.organizationType" },
-          industryType: { $first: "$founding.industryTypes" },
-          latestJob: { $first: "$$ROOT" }
-        }
+  // Group by userId
+  {
+    $group: {
+      _id: "$userId",
+      totalCompanyJobs: { $sum: 1 },
+      companyName: {
+        $first: "$company.companyName",
       },
-
-      // Merge fields with latestJob
-      {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: [
-              "$latestJob",
-              {
-                companyName: "$companyName",
-                logo: "$logo",
-                location: "$location",
-                organizationType: "$organizationType",
-                industryType: "$industryType",
-                totalCompanyJobs: "$totalCompanyJobs",
-                 featured: "featured"
-              }
-            ]
-          }
-        }
+      logo: { $first: "$company.logo" },
+      location: {
+        $first: "$contactInfo.mapLocation",
       },
+      organizationType: {
+        $first: "$founding.organizationType",
+      },
+      industryType: {
+        $first: "$founding.industryTypes",
+      }, // 👈 Added this
+      employee: { $first: "$founding.teamSize" }, // 👈 Added this
+      latestJob: { $first: "$$ROOT" },
+    },
+  },
 
-      // Final projection
-      {
-        $project: {
-          _id: 1,
-          userId: 1,
-          companyName: 1,
-          logo: 1,
-          location: 1,
-          totalCompanyJobs: 1,
-          title: 1,
-          tags: 1,
-          jobRole: 1,
-          postedDate: 1,
-          organizationType: 1,
-          industryType: 1,
-          featured: 1
-        }
-      }
-    ]);
+  // Merge job info + additional fields
+  {
+    $replaceRoot: {
+      newRoot: {
+        $mergeObjects: [
+          "$latestJob",
+          {
+            companyName: "$companyName",
+            logo: "$logo",
+            location: "$location",
+            organizationType: "$organizationType",
+            industryType: "$industryType", // 👈 Added this
+            totalCompanyJobs: "$totalCompanyJobs",
+            employee: "$employee",
+            featured: "featured",
+          },
+        ],
+      },
+    },
+  },
+
+  // Final projection
+  {
+    $project: {
+      _id: 1,
+      userId: 1,
+      companyName: 1,
+      logo: 1,
+      location: 1,
+      totalCompanyJobs: 1,
+      title: 1,
+      tags: 1,
+      jobRole: 1,
+      postedDate: 1,
+      organizationType: 1,
+      industryType: 1, // 👈 Included this
+      featured: 1,
+      employee: 1,
+    },
+  },
+]);
 
     // Success response
     res.status(200).json({
