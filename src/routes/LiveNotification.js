@@ -83,8 +83,8 @@ router.post('/customerMessage', async (req, res) => {
 
     const msgData = { senderId, role, message, id, email, name, isAdmin, receiverId, isRead, dateWithTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }) };
 
-    // ✅ কাস্টমার হলে প্রোফাইল নিশ্চিত করতে হবে
-    if (role === 'customer') {
+
+ 
       let findProfile = await CustomerProfile.findOne({ senderId });
 
       if (!findProfile) {
@@ -95,7 +95,7 @@ router.post('/customerMessage', async (req, res) => {
         const saveCustomerProfile = new CustomerProfile({ senderId, name, email });
         findProfile = await saveCustomerProfile.save();
       }
-    }
+  
 
     // ✅ যে-ই হোক, তার receiverId অনুযায়ী মেসেজ পাঠিয়ে দাও
     io.to(receiverId).emit('message', msgData);
