@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const nodemailer = require("nodemailer");
 const { connectMongoDB, connectPostgreSQL, pool } = require('./config/db');
 const user = require('./routes/UserRoute');
 const applicant = require('./routes/ApplicantRoute');
