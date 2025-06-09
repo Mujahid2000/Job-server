@@ -1,6 +1,8 @@
 const express = require('express');
 const NotificationSchemas = require('../models/NotificationSchema');
 const SaveNotificationSchema = require('../models/SaveNotificationSchema');
+const AdminChatMessageSaveForAdmin = require('../models/AdminChatMessageForUser');
+const CustomerProfile = require('../models/CustomerProfile');
 
 const router = express.Router();
 
@@ -66,5 +68,50 @@ router.post('/send', async (req, res) => {
 router.post('/sendSavedProfile', async (req, res) => {
   await handleNotification(req, res, 'savedProfile');
 });
+
+
+// server/routes/apiRoutes.js
+router.post('/customerMessage', async (req, res) => {
+  try {
+    const { io } = req;
+    const { senderId, role, message, id, email, name, isAdmin, receiverId, isRead } = req.body;
+
+    // Basic validation
+    if (!senderId || !message || !id || !role || !receiverId || !email || !name) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const msgData = { senderId, role, message, id, email, name, isAdmin, receiverId, isRead, dateWithTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }) };
+
+    // ✅ কাস্টমার হলে প্রোফাইল নিশ্চিত করতে হবে
+    if (role === 'customer') {
+      let findProfile = await CustomerProfile.findOne({ senderId });
+
+      if (!findProfile) {
+        if (!name || !email) {
+          return res.status(400).json({ success: false, error: 'Name and email are required for new profile' });
+        }
+
+        const saveCustomerProfile = new CustomerProfile({ senderId, name, email });
+        findProfile = await saveCustomerProfile.save();
+      }
+    }
+
+    // ✅ যে-ই হোক, তার receiverId অনুযায়ী মেসেজ পাঠিয়ে দাও
+    io.to(receiverId).emit('message', msgData);
+
+    // ✅ ডাটাবেজে সেভ করো
+    const saveUserMessage = new AdminChatMessageSaveForAdmin(msgData);
+    await saveUserMessage.save();
+
+    return res.status(200).json({ success: true, data: msgData });
+
+  } catch (error) {
+    console.error('Error saving message:', error);
+    return res.status(500).json({ success: false, error: 'Failed to save message' });
+  }
+});
+
+
 
 module.exports = router;
