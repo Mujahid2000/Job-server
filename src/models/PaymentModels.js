@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 // Define the Payment schema
 const PaymentSchema = new mongoose.Schema({
