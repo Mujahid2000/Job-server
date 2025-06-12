@@ -1,18 +1,28 @@
-const  jwt = require('jsonwebtoken');
+// VerificationMiddleware.js
+const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
+dotenv.config();
 
-const verifyToken = async ((req, resizeBy, next) =>{
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized access: No token provided.' });
+  }
 
-})
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).send({ message: 'Unauthorized access: Malformed token.' });
+  }
 
-jwt.sign({
-  exp: Math.floor(Date.now() / 1000) + (60 * 60),
-  data: 'foobar'
-}, 'secret');
+  jwt.verify(token, process.env.SECRET_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: 'Unauthorized access: Invalid token.' });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
-
-
-module.exports = {
-    verifyToken
-}
+// ✅ Correct export
+module.exports = verifyToken;

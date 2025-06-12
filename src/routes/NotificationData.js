@@ -3,9 +3,10 @@ const SaveNotificationSchema = require('../models/SaveNotificationSchema');
 const UserChatMessageSaveForAdmin = require('../models/UserChatMessageSaveForAdmin');
 const AdminChatMessageSaveForAdmin = require('../models/AdminChatMessageForUser');
 const CustomerProfile = require('../models/CustomerProfile');
+const verifyToken = require('../middlewareFolder/VerificationMiddleware')
 const router = express.Router();
 
-router.get('/notificationData/:userId', async (req, res) => {
+router.get('/notificationData/:userId', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
         const notifications = await SaveNotificationSchema.aggregate([
