@@ -255,4 +255,153 @@ router.get('/getCompanyDataForHome', async (req, res) => {
   }
 });
 
+// company profile complete api
+router.get('/companyProfileComplete/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const companyProfile = await CompanyModel.aggregate([
+  {
+    $match: {
+      userId: userId
+    }
+  },
+  {
+    $lookup: {
+      from: "contacts",
+      localField: "userId",
+      foreignField: "userId",
+      as: "contact"
+    }
+  },
+  {
+    $unwind: {
+      path: "$contact",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $lookup: {
+      from: "founderinfos",
+      localField: "userId",
+      foreignField: "userId",
+      as: "found"
+    }
+  },
+  {
+    $unwind: {
+      path: "$found",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $lookup: {
+      from: "socialmediainfos",
+      localField: "userId",
+      foreignField: "userId",
+      as: "social"
+    }
+  },
+  {
+    $unwind: {
+      path: "$social",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $set: {
+      mapLocation: "$contact.mapLocation",
+      phoneNumber: "$contact.phoneNumber",
+      email: "$contact.email",
+      organizationType: "$found.organizationType",
+      industryType: "$found.industryTypes",
+      teamSize: "$found.industryTypes",
+      yearEstablished: "$found.yearEstablished",
+      companyWebsite: "$found.companyWebsite",
+      social: "$social.socialLinks",
+      noComplete: {
+        $cond: {
+          if: {
+            $or: [
+              {
+                $eq: [
+                  "$contact.mapLocation",
+                  null
+                ]
+              },
+              {
+                $eq: [
+                  "$contact.phoneNumber",
+                  null
+                ]
+              },
+              { $eq: ["$contact.email", null] },
+              {
+                $eq: [
+                  "$found.organizationType",
+                  null
+                ]
+              },
+              {
+                $eq: [
+                  "$found.industryTypes",
+                  null
+                ]
+              },
+              {
+                $eq: [
+                  "$found.yearEstablished",
+                  null
+                ]
+              },
+              {
+                $eq: [
+                  "$found.companyWebsite",
+                  null
+                ]
+              },
+              {
+                $eq: ["$social.socialLinks", null]
+              }
+            ]
+          },
+          then: true,
+          else: false
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      companyName: 1,
+      logo: 1,
+      banner: 1,
+      biography: 1,
+      mapLocation: 1,
+      phoneNumber: 1,
+      email: 1,
+      organizationType: 1,
+      industryType: 1,
+      teamSize: 1,
+      yearEstablished: 1,
+      companyWebsite: 1,
+      social: 1,
+      noComplete: 1
+    }
+  }
+]);
+
+    if (!companyProfile.length) {
+      return res.status(404).json({ message: "Company profile not found." });
+    }
+
+    return res.status(200).json(companyProfile[0]);
+
+  } catch (error) {
+    console.error("Error fetching company profile:", error);
+    return res.status(500).json({ message: "Server error", error });
+  }
+});
+
+
 module.exports = router;
