@@ -56,7 +56,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
-
+// main route path
 app.use('/user', user);
 app.use('/applicantData', applicant);
 app.use('/companyData', AccountSetupRoute);
