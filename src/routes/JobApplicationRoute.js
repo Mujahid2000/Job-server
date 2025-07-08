@@ -110,10 +110,10 @@ router.post('/jobPost', async (req, res) => {
 
 
 router.post('/PromotedJObs',async (req, res) =>{
-    const {id, jobId, companyId, promotedSystem} = req.body;
-    
+    const {userId, jobId, companyId, promotedSystem} = req.body;
+    // console.log(userId, jobId, companyId, promotedSystem)
     try {
-        if(!id || !jobId || !companyId || !promotedSystem){
+        if(!userId || !jobId || !companyId || !promotedSystem){
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields: all fields except tags and status are required'
@@ -121,7 +121,7 @@ router.post('/PromotedJObs',async (req, res) =>{
         }
 
         const promotedData = promotedJobs({
-            userId: id,
+            userId: userId,
             jobId,
             companyId,
             promotedSystem
