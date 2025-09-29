@@ -111,4 +111,58 @@ router.get('/users/:email', async (req, res) => {
     }
 });
 
+
+router.get('/users', async (req, res) => {
+    try {
+        const users = await UserSchema.aggregate([
+  {
+    $addFields: {
+      idString: { $toString: "$_id" } // Convert ObjectId to string
+    }
+  },
+  {
+    $lookup: {
+      from: "payments",
+      localField: "idString",      // Now a string version of _id
+      foreignField: "userId",      // String field in payments
+      as: "userData"
+    }
+  },
+  {
+    $unwind: {
+      path: "$userData",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $set: {
+      packageName: "$userData.packageName",
+      formatDate: {
+        $dateToString: {
+          format: "%Y-%m-%d",
+          date: "$createdAt"
+
+        }
+      }
+      
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      name: 1,
+      email: 1,
+      role: 1,
+      packageName: 1,
+      date: "$formatDate"
+  		
+    }
+  }
+]);
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch users', details: error.message });
+    }
+});
+
 module.exports = router;
