@@ -134,9 +134,25 @@ router.get('/users', async (req, res) => {
       preserveNullAndEmptyArrays: true
     }
   },
+
+  {
+    $lookup: {
+      from: "companydatas",
+      localField: "idString",
+      foreignField: "userId",
+      as: "companydata"
+    }
+  },
+  {
+    $unwind: {
+      path: "$companydata",
+      preserveNullAndEmptyArrays: true
+    }
+  },
   {
     $set: {
       packageName: "$userData.packageName",
+      companyName: "$companydata.companyName",
       formatDate: {
         $dateToString: {
           format: "%Y-%m-%d",
@@ -154,7 +170,8 @@ router.get('/users', async (req, res) => {
       email: 1,
       role: 1,
       packageName: 1,
-      date: "$formatDate"
+      date: "$formatDate",
+      companyName: 1
   		
     }
   }
