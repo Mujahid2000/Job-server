@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/AsyncHandler";
+import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 const NotificationSchemas = require('../models/NotificationSchema');
 const SaveNotificationSchema = require('../models/SaveNotificationSchema');
 const AdminChatMessageSaveForAdmin = require('../models/AdminChatMessageForUser');
@@ -14,7 +16,7 @@ const sendNotification = asyncHandler(async (req: Request, res: Response) => {
 
     // Validate required fields
     if (!id || !companyUser || !applicantId || !jobId || !message) {
-        return res.status(400).json({ error: 'Missing required fields' });
+        throw new ApiError(400, 'Missing required fields');
     }
 
     const notification = {
@@ -32,7 +34,7 @@ const sendNotification = asyncHandler(async (req: Request, res: Response) => {
         const userNotificationStatus = await NotificationSchemas.findOne({ userId: applicantId });
 
         if (!userNotificationStatus) {
-            return res.status(404).json({ error: 'No notification record found for this user' });
+            throw new ApiError(404, 'No notification record found for this user');
         }
 
         // Check eligibility based on notification type
@@ -42,7 +44,9 @@ const sendNotification = asyncHandler(async (req: Request, res: Response) => {
                 : userNotificationStatus.savedProfile;
 
         if (!isAllowed) {
-            return res.status(200).json({ message: `Notification not sent: User is not eligible for ${type}` });
+            return res.status(200).json(
+                new ApiResponse(200, null, `Notification not sent: User is not eligible for ${type}`)
+            );
         }
 
         // Save to appropriate schema
@@ -51,10 +55,12 @@ const sendNotification = asyncHandler(async (req: Request, res: Response) => {
         // Emit via socket
         io.to(applicantId).emit('receiveNotification', notification);
 
-        return res.status(200).json({ message: 'Notification sent successfully', notification });
-    } catch (error) {
+        return res.status(200).json(
+            new ApiResponse(200, notification, 'Notification sent successfully')
+        );
+    } catch (error: any) {
         console.error(`Error sending ${type} notification:`, error);
-        return res.status(500).json({ error: `Failed to send ${type} notification` });
+        throw new ApiError(500, `Failed to send ${type} notification`, [error.message]);
     }
 });
 
@@ -65,7 +71,7 @@ const customerMessage = asyncHandler(async (req: Request, res: Response) => {
 
         // Basic validation
         if (!senderId || !message || !id || !role || !receiverId || !email || !name) {
-            return res.status(400).json({ success: false, error: 'Missing required fields' });
+            throw new ApiError(400, 'Missing required fields');
         }
 
         const msgData = { senderId, role, message, id, email, name, isAdmin, receiverId, isRead, dateWithTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }) };
@@ -74,7 +80,7 @@ const customerMessage = asyncHandler(async (req: Request, res: Response) => {
 
         if (!findProfile) {
             if (!name || !email) {
-                return res.status(400).json({ success: false, error: 'Name and email are required for new profile' });
+                throw new ApiError(400, 'Name and email are required for new profile');
             }
 
             const saveCustomerProfile = new CustomerProfile({ senderId, name, email });
@@ -88,11 +94,13 @@ const customerMessage = asyncHandler(async (req: Request, res: Response) => {
         const saveUserMessage = new AdminChatMessageSaveForAdmin(msgData);
         await saveUserMessage.save();
 
-        return res.status(200).json({ success: true, data: msgData });
+        return res.status(200).json(
+            new ApiResponse(200, msgData, 'Message sent successfully')
+        );
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error saving message:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save message' });
+        throw new ApiError(500, 'Failed to save message', [error.message]);
     }
 });
 

@@ -1,19 +1,31 @@
-import { Request, Response } from "express";
-import { asyncHandler } from "../utils/AsyncHandler";
-import { ApiResponse } from "../utils/ApiResponse";
-import { ApiError } from "../utils/ApiError";
-import CompanyModel from "../models/CompanyModel";
-import FounderInfo from "../models/FounderInfoModel";
-import SocialMedia from "../models/SocialMediaModel";
-import LastContact from "../models/ContactSchema";
-import JobPosting from "../models/JobApplicationModels";
-
-
-const getCompanyData = asyncHandler(async (req: Request, res: Response) => {
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getComapnyProfileCompleteData = exports.getCompanyDataForHome = exports.getComapnyContactsData = exports.getComapnySocialData = exports.getCompanyProfileData = exports.getCompanyPersonalData = exports.getCompanyData = void 0;
+const AsyncHandler_1 = require("../utils/AsyncHandler");
+const ApiResponse_1 = require("../utils/ApiResponse");
+const ApiError_1 = require("../utils/ApiError");
+const CompanyModel_1 = __importDefault(require("../models/CompanyModel"));
+const FounderInfoModel_1 = __importDefault(require("../models/FounderInfoModel"));
+const SocialMediaModel_1 = __importDefault(require("../models/SocialMediaModel"));
+const ContactSchema_1 = __importDefault(require("../models/ContactSchema"));
+const JobApplicationModels_1 = __importDefault(require("../models/JobApplicationModels"));
+const getCompanyData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id; // Extract id as a string
     try {
         // Use aggregation to fetch data from both collections
-        const result = await CompanyModel.aggregate([
+        const result = yield CompanyModel_1.default.aggregate([
             {
                 $match: { userId: id } // Match the userId in CompanyModel
             },
@@ -38,106 +50,91 @@ const getCompanyData = asyncHandler(async (req: Request, res: Response) => {
                 }
             }
         ]);
-
         if (!result || result.length === 0) {
-            throw new ApiError(404, 'Company not found');
+            throw new ApiError_1.ApiError(404, 'Company not found');
         }
-
-        return res.status(200).json(
-            new ApiResponse(200, result[0], 'Company data retrieved successfully')
-        );
-    } catch (error: any) {
-        throw new ApiError(500, 'Server error', [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, result[0], 'Company data retrieved successfully'));
     }
-})
-
-const getCompanyPersonalData = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        throw new ApiError_1.ApiError(500, 'Server error', [error.message]);
+    }
+}));
+exports.getCompanyData = getCompanyData;
+const getCompanyPersonalData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
     try {
         // Use lean() for better performance if you don't need mongoose document methods
-        const companyPersonal = await CompanyModel.findOne({ userId }).lean();
+        const companyPersonal = yield CompanyModel_1.default.findOne({ userId }).lean();
         if (!companyPersonal) {
-            throw new ApiError(404, 'Company profile not found');
+            throw new ApiError_1.ApiError(404, 'Company profile not found');
         }
         // Optionally, remove sensitive fields before sending response
         // delete companyProfile.sensitiveField;
-
-        return res.status(200).json(
-            new ApiResponse(200, companyPersonal, 'Company personal data retrieved successfully')
-        );
-    } catch (error: any) {
-        console.error('Error fetching company profile:', error);
-        throw new ApiError(500, 'Server error', [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, companyPersonal, 'Company personal data retrieved successfully'));
     }
-})
-
-
-const getCompanyProfileData = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        console.error('Error fetching company profile:', error);
+        throw new ApiError_1.ApiError(500, 'Server error', [error.message]);
+    }
+}));
+exports.getCompanyPersonalData = getCompanyPersonalData;
+const getCompanyProfileData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-
     // Basic validation: check if userId is provided and is a non-empty string
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-        throw new ApiError(400, 'Invalid or missing userId parameter');
+        throw new ApiError_1.ApiError(400, 'Invalid or missing userId parameter');
     }
-
     try {
-        const companyProfile = await FounderInfo.findOne({ userId }).lean();
+        const companyProfile = yield FounderInfoModel_1.default.findOne({ userId }).lean();
         if (!companyProfile) {
-            throw new ApiError(404, 'Company profile not found');
+            throw new ApiError_1.ApiError(404, 'Company profile not found');
         }
-        return res.status(200).json(
-            new ApiResponse(200, companyProfile, 'Company profile retrieved successfully')
-        );
-    } catch (error: any) {
-        throw new ApiError(500, 'Server error', [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, companyProfile, 'Company profile retrieved successfully'));
     }
-})
-
-const getComapnySocialData = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        throw new ApiError_1.ApiError(500, 'Server error', [error.message]);
+    }
+}));
+exports.getCompanyProfileData = getCompanyProfileData;
+const getComapnySocialData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-
     // Validate userId
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-        throw new ApiError(400, 'Invalid or missing userId parameter');
+        throw new ApiError_1.ApiError(400, 'Invalid or missing userId parameter');
     }
-
     try {
-        const companySocialLink = await SocialMedia.findOne({ userId }).lean();
+        const companySocialLink = yield SocialMediaModel_1.default.findOne({ userId }).lean();
         if (!companySocialLink) {
-            throw new ApiError(404, 'Social media links not found');
+            throw new ApiError_1.ApiError(404, 'Social media links not found');
         }
-        return res.status(200).json(
-            new ApiResponse(200, companySocialLink, 'Social media links retrieved successfully')
-        );
-    } catch (error: any) {
-        throw new ApiError(500, 'Server error', [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, companySocialLink, 'Social media links retrieved successfully'));
     }
-})
-
-const getComapnyContactsData = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        throw new ApiError_1.ApiError(500, 'Server error', [error.message]);
+    }
+}));
+exports.getComapnySocialData = getComapnySocialData;
+const getComapnyContactsData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-
     // Validate userId
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-        throw new ApiError(400, 'Invalid or missing userId parameter');
+        throw new ApiError_1.ApiError(400, 'Invalid or missing userId parameter');
     }
-
     try {
-        const companyContact = await LastContact.findOne({ userId }).lean();
+        const companyContact = yield ContactSchema_1.default.findOne({ userId }).lean();
         if (!companyContact) {
-            throw new ApiError(404, 'Company contact not found');
+            throw new ApiError_1.ApiError(404, 'Company contact not found');
         }
-        return res.status(200).json(
-            new ApiResponse(200, companyContact, 'Company contact retrieved successfully')
-        );
-    } catch (error: any) {
-        throw new ApiError(500, 'Server error', [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, companyContact, 'Company contact retrieved successfully'));
     }
-})
-
-const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        throw new ApiError_1.ApiError(500, 'Server error', [error.message]);
+    }
+}));
+exports.getComapnyContactsData = getComapnyContactsData;
+const getCompanyDataForHome = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const getCompanyProfile = await JobPosting.aggregate([
+        const getCompanyProfile = yield JobApplicationModels_1.default.aggregate([
             // Lookup from companydatas
             {
                 $lookup: {
@@ -153,7 +150,6 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                     preserveNullAndEmptyArrays: true,
                 },
             },
-
             // Lookup from contacts
             {
                 $lookup: {
@@ -169,7 +165,6 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                     preserveNullAndEmptyArrays: true,
                 },
             },
-
             // Lookup from founderinfos
             {
                 $lookup: {
@@ -185,7 +180,6 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                     preserveNullAndEmptyArrays: true,
                 },
             },
-
             // Group by userId
             {
                 $group: {
@@ -208,7 +202,6 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                     latestJob: { $first: "$$ROOT" },
                 },
             },
-
             // Merge job info + additional fields
             {
                 $replaceRoot: {
@@ -229,7 +222,6 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                     },
                 },
             },
-
             // Final projection
             {
                 $project: {
@@ -250,24 +242,19 @@ const getCompanyDataForHome = asyncHandler(async (req: Request, res: Response) =
                 },
             },
         ]);
-
         // Success response
-        res.status(200).json(
-            new ApiResponse(200, getCompanyProfile, 'Company data retrieved successfully')
-        );
-
-    } catch (error: any) {
-        console.error("Error fetching company data:", error);
-        throw new ApiError(500, "Server Error. Unable to fetch company data.", [error.message]);
+        res.status(200).json(new ApiResponse_1.ApiResponse(200, getCompanyProfile, 'Company data retrieved successfully'));
     }
-})
-
-
-const getComapnyProfileCompleteData = asyncHandler(async (req: Request, res: Response) => {
+    catch (error) {
+        console.error("Error fetching company data:", error);
+        throw new ApiError_1.ApiError(500, "Server Error. Unable to fetch company data.", [error.message]);
+    }
+}));
+exports.getCompanyDataForHome = getCompanyDataForHome;
+const getComapnyProfileCompleteData = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-
     try {
-        const companyProfile = await CompanyModel.aggregate([
+        const companyProfile = yield CompanyModel_1.default.aggregate([
             {
                 $match: {
                     userId: userId
@@ -397,27 +384,14 @@ const getComapnyProfileCompleteData = asyncHandler(async (req: Request, res: Res
                 }
             }
         ]);
-
         if (!companyProfile.length) {
-            throw new ApiError(404, "Company profile not found.");
+            throw new ApiError_1.ApiError(404, "Company profile not found.");
         }
-
-        return res.status(200).json(
-            new ApiResponse(200, companyProfile[0], 'Company profile retrieved successfully')
-        );
-
-    } catch (error: any) {
-        console.error("Error fetching company profile:", error);
-        throw new ApiError(500, "Server error", [error.message]);
+        return res.status(200).json(new ApiResponse_1.ApiResponse(200, companyProfile[0], 'Company profile retrieved successfully'));
     }
-})
-
-export {
-    getCompanyData,
-    getCompanyPersonalData,
-    getCompanyProfileData,
-    getComapnySocialData,
-    getComapnyContactsData,
-    getCompanyDataForHome,
-    getComapnyProfileCompleteData
-}
+    catch (error) {
+        console.error("Error fetching company profile:", error);
+        throw new ApiError_1.ApiError(500, "Server error", [error.message]);
+    }
+}));
+exports.getComapnyProfileCompleteData = getComapnyProfileCompleteData;

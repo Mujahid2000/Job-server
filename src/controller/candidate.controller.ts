@@ -3,111 +3,115 @@ import { asyncHandler } from "../utils/AsyncHandler";
 import JobAppliedSchema from "../models/AppliedDataSchema";
 import Bookmark from "../models/BookMarksModel";
 import ApplicantModels from "../models/ApplicantModels";
+import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 
 
 const candidateApplyJobList = asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-   
-     // Validate if userId is a valid string
-     if (!userId || typeof userId !== 'string') {
-       return res.status(400).json({ error: 'Invalid or missing userId' });
-     }
-   
-     try {
-       const appliedJobs = await JobAppliedSchema.aggregate([
-         // Match by userId
-         {
-           $match: {
-             userId: userId,
-           },
-         },
-   
-         // Lookup job details by converting string jobId to ObjectId
-         {
-           $lookup: {
-             from: "jobpostingcollections",
-             let: { jobIdStr: "$jobId" },
-             pipeline: [
-               {
-                 $match: {
-                   $expr: {
-                     $eq: [
-                       "$_id",
-                       { $toObjectId: "$$jobIdStr" }
-                     ],
-                   },
-                 },
-               },
-             ],
-             as: "jobPosting",
-           },
-         },
-         {
-           $unwind: {
-             path: "$jobPosting",
-             preserveNullAndEmptyArrays: true,
-           },
-         },
-   
-         // Lookup company data based on jobPosting.userId
-         {
-           $lookup: {
-             from: "companydatas",
-             localField: "jobPosting.userId",
-             foreignField: "userId",
-             as: "companyData",
-           },
-         },
-         {
-           $unwind: {
-             path: "$companyData",
-             preserveNullAndEmptyArrays: true,
-           },
-         },
-   
-         // Set selected fields for response
-         {
-           $set: {
-             logo: "$companyData.logo",
-             jobTitle: "$jobPosting.title",
-             location: "$jobPosting.location",
-             minSalary: "$jobPosting.minSalary",
-             maxSalary: "$jobPosting.maxSalary",
-             jobType: "$jobPosting.jobType",
-             status: "$jobPosting.status",
-           },
-         },
-   
-         // Final projection
-         {
-           $project: {
-             logo: 1,
-             jobTitle: 1,
-             location: 1,
-             minSalary: 1,
-             maxSalary: 1,
-             jobType: 1,
-             date: 1,
-             status: 1,
-             jobId: 1,
-           },
-         },
-       ]);
-   
-       return res.status(200).json({ success: true, data: appliedJobs });
-   
-     } catch (error) {
-       console.error('Error fetching candidate applied job list:', error);
-       return res.status(500).json({ success: false, error: 'Server error' });
-     } 
+  const { userId } = req.params;
+
+  // Validate if userId is a valid string
+  if (!userId || typeof userId !== 'string') {
+    throw new ApiError(400, 'Invalid or missing userId');
+  }
+
+  try {
+    const appliedJobs = await JobAppliedSchema.aggregate([
+      // Match by userId
+      {
+        $match: {
+          userId: userId,
+        },
+      },
+
+      // Lookup job details by converting string jobId to ObjectId
+      {
+        $lookup: {
+          from: "jobpostingcollections",
+          let: { jobIdStr: "$jobId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    "$_id",
+                    { $toObjectId: "$$jobIdStr" }
+                  ],
+                },
+              },
+            },
+          ],
+          as: "jobPosting",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobPosting",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Lookup company data based on jobPosting.userId
+      {
+        $lookup: {
+          from: "companydatas",
+          localField: "jobPosting.userId",
+          foreignField: "userId",
+          as: "companyData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$companyData",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // Set selected fields for response
+      {
+        $set: {
+          logo: "$companyData.logo",
+          jobTitle: "$jobPosting.title",
+          location: "$jobPosting.location",
+          minSalary: "$jobPosting.minSalary",
+          maxSalary: "$jobPosting.maxSalary",
+          jobType: "$jobPosting.jobType",
+          status: "$jobPosting.status",
+        },
+      },
+
+      // Final projection
+      {
+        $project: {
+          logo: 1,
+          jobTitle: 1,
+          location: 1,
+          minSalary: 1,
+          maxSalary: 1,
+          jobType: 1,
+          date: 1,
+          status: 1,
+          jobId: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json(
+      new ApiResponse(200, appliedJobs, 'Applied jobs fetched successfully')
+    );
+
+  } catch (error: any) {
+    console.error('Error fetching candidate applied job list:', error);
+    throw new ApiError(500, 'Server error', [error.message]);
+  }
 })
 
 const candidateFavouriteJobList = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.params;
+  const { email } = req.params;
 
   // Basic email format check
   if (!email || !email.includes('@')) {
-    return res.status(400).json({ error: 'Invalid email address provided.' });
+    throw new ApiError(400, 'Invalid email address provided.');
   }
 
   try {
@@ -160,7 +164,7 @@ const candidateFavouriteJobList = asyncHandler(async (req: Request, res: Respons
           postedDate: "$jobPost.postedDate",
           jobStatus: {
             $cond: {
-               if: { $lt: ["$jobPost.expiryDate", "$$NOW"] },
+              if: { $lt: ["$jobPost.expiryDate", "$$NOW"] },
               then: "Job Expired",
               else: "Active"
             }
@@ -185,87 +189,91 @@ const candidateFavouriteJobList = asyncHandler(async (req: Request, res: Respons
       }
     ]);
 
-    res.status(200).json({ success: true, data: favoriteJobs });
+    res.status(200).json(
+      new ApiResponse(200, favoriteJobs, 'Favorite jobs fetched successfully')
+    );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching favorite job list:", error);
-    res.status(500).json({ error: "Internal server error" });
+    throw new ApiError(500, "Internal server error", [error.message]);
   }
 })
 
 
 const candidateList = asyncHandler(async (req: Request, res: Response) => {
-     try {
-        const candidateList = await ApplicantModels.aggregate([
-  {
-    $lookup: {
-      from: "personaldatas",
-      localField: "userId",
-      foreignField: "userId",
-      as: "profiledata",
-    },
-  },
-  {
-    $unwind: {
-      path: "$profiledata",
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $lookup: {
-      from: "contacts",
-      localField: "userId",
-      foreignField: "userId",
-      as: "contact",
-    },
-  },
-  {
-    $unwind: {
-      path: "$contact",
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $lookup: {
-      from: "resumecollections",
-      localField: "userId",
-      foreignField: "userId",
-      as: "resume",
-    },
-  },
+  try {
+    const candidateList = await ApplicantModels.aggregate([
+      {
+        $lookup: {
+          from: "personaldatas",
+          localField: "userId",
+          foreignField: "userId",
+          as: "profiledata",
+        },
+      },
+      {
+        $unwind: {
+          path: "$profiledata",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "contacts",
+          localField: "userId",
+          foreignField: "userId",
+          as: "contact",
+        },
+      },
+      {
+        $unwind: {
+          path: "$contact",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "resumecollections",
+          localField: "userId",
+          foreignField: "userId",
+          as: "resume",
+        },
+      },
 
-  {
-    $set: {
-      education: "$profiledata.education",
-      gender: "$profiledata.gender",
-      location: "$contact.mapLocation",
-      resume_Id: "$resume._id",
-    },
-  },
-  {
-    $project: {
-      profilePicture: 1,
-      location: 1,
-      gender: 1,
-      fullName: 1,
-      title: 1,
-      education: 1,
-      experience: 1,
-      resume_Id: 1,
-      userId: 1,
-    },
-  },
-]);
+      {
+        $set: {
+          education: "$profiledata.education",
+          gender: "$profiledata.gender",
+          location: "$contact.mapLocation",
+          resume_Id: "$resume._id",
+        },
+      },
+      {
+        $project: {
+          profilePicture: 1,
+          location: 1,
+          gender: 1,
+          fullName: 1,
+          title: 1,
+          education: 1,
+          experience: 1,
+          resume_Id: 1,
+          userId: 1,
+        },
+      },
+    ]);
 
-        res.status(200).json({ success: true, data: candidateList });
-    } catch (err) {
-        console.error("Error fetching candidate list:", err);
-        res.status(500).json({ error: "Internal Server Error" }); // Example error response
-    }
+    res.status(200).json(
+      new ApiResponse(200, candidateList, 'Candidate list fetched successfully')
+    );
+  } catch (err: any) {
+    // console.error("Error fetching candidate list:", err);
+    throw new ApiError(500, "Internal Server Error", [err.message]);
+  }
 })
 
 export {
-    candidateApplyJobList,
-    candidateFavouriteJobList,
-    candidateList
+  candidateApplyJobList,
+  candidateFavouriteJobList,
+  candidateList
 }
