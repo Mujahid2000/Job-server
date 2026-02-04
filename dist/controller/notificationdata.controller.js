@@ -146,7 +146,7 @@ const customerMessageForAdmin = (0, AsyncHandler_1.asyncHandler)((req, res) => _
 exports.customerMessageForAdmin = customerMessageForAdmin;
 const adminMessageForCustomer = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { adminId, userid } = req.query;
-    console.log(adminId, userid);
+    // console.log(adminId, userid);
     if (!userid || !adminId) {
         throw new ApiError_1.ApiError(404, 'user id is required');
     }

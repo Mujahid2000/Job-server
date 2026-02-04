@@ -261,7 +261,7 @@ const candidateList = (0, AsyncHandler_1.asyncHandler)((req, res) => __awaiter(v
         res.status(200).json(new ApiResponse_1.ApiResponse(200, candidateList, 'Candidate list fetched successfully'));
     }
     catch (err) {
-        console.error("Error fetching candidate list:", err);
+        // console.error("Error fetching candidate list:", err);
         throw new ApiError_1.ApiError(500, "Internal Server Error", [err.message]);
     }
 }));
