@@ -5,8 +5,10 @@ import http from 'http';
 import mongoose from 'mongoose';
 import path from 'path';
 import { Server } from 'socket.io';
+import swaggerJsDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import { connectMongoDB, connectPostgreSQL, pool } from './config/db';
-import jwtMiddleware from './middlewareFolder/JWTTokenMiddleware';
+import jwtMiddleware from './middleware/JWTTokenMiddleware';
 import AccountSetupRoute from './routes/AccountSetupRoute';
 import applicant from './routes/ApplicantRoute';
 import AppliedJobs from './routes/AppliedJobsRoute';
@@ -20,6 +22,7 @@ import shortList from './routes/ShortListedRoute';
 import SubscriptionRoutes from './routes/SubscriptionData';
 import Tags from './routes/TagsRoute';
 import user from './routes/UserRoute';
+import { errorMiddleware } from './middleware/errorMiddleware';
 
 // Load environment variables
 dotenv.config();
@@ -55,6 +58,39 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger configuration
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Job Portal API',
+            version: '1.0.0',
+            description: 'API documentation for the Job Portal application',
+        },
+        servers: [
+            {
+                url: process.env.NODE_ENV === 'production'
+                    ? 'https://your-production-url.com'
+                    : 'http://localhost:5000',
+                description: 'Development server',
+            },
+        ],
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+    },
+    apis: ['./src/routes/*.ts'], // Path to the API docs
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'template', 'index.html'));
@@ -75,11 +111,7 @@ app.use('/liveNotification', liveNotification);
 app.use('/notification', notificationData);
 app.use('/jwt', jwtMiddleware);
 
-// Error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
-});
+app.use(errorMiddleware);
 
 // Socket.IO connection
 io.on('connection', (socket) => {

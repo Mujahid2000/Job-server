@@ -7,12 +7,41 @@ import JobAlertSchemas from "../models/JobAlertsSchema";
 import ProfilePrivacySchemas from "../models/ProfilePrivacySchema";
 import UserSchema from "../models/UserModels";
 import { genarateTokens, refreashToken } from "../utils/genarateTokens";
+import { Types } from "mongoose";
+
+const generateAccessAndRefreshTokens = async (userId: string) => {
+  try {
+    const user = await UserSchema.findById(new Types.ObjectId(userId));
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    const accessToken = await user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      'Something went wrong while generating access and refresh tokens'
+    );
+  }
+};
+
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { name, email, password, role, phoneNumber } = req.body;
 
   if (!name || !email || !password || !role || !phoneNumber) {
     throw new ApiError(400, 'All fields are required');
+  }
+
+  const userExists = await UserSchema.findOne({ email });
+  if (userExists) {
+    throw new ApiError(400, 'User already exists');
   }
 
   const session = await UserSchema.startSession();
@@ -61,18 +90,8 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
-    const accessToken = genarateTokens(saveUserData);
-    const refreashTokens = refreashToken(saveUserData);
-
-    res.cookie("refreashTokens", refreashTokens, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
-
     res.status(201).json(
-      new ApiResponse(201, saveUserData, 'User registered successfully')
+      new ApiResponse(201, 'User registered successfully')
     );
   } catch (error: any) {
     // Rollback the transaction on error
@@ -85,22 +104,38 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 
 const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     throw new ApiError(400, 'Email and password are required');
   }
 
   try {
-    // Find user by email and password
-    const user = await UserSchema.findOne({ email, password });
-
+    // Find user by email (include password for validation)
+    const user = await UserSchema.findOne({ email });
     if (!user) {
-      throw new ApiError(404, 'Invalid email or password');
+      throw new ApiError(404, 'Email not found');
     }
 
-    res.status(200).json(
-      new ApiResponse(200, user, 'User found')
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+      throw new ApiError(401, 'Invalid password');
+    }
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id.toString()
+  );
+    // Remove password from response
+    const { password: _, ...userResponse } = user.toObject();
+    const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  };
+    res.
+    status(200)
+    .cookie(accessToken,options)
+    .cookie(refreshToken,options)
+    .json(
+      new ApiResponse(200, userResponse, 'User logged in successfully')
     );
+
   } catch (error: any) {
     throw new ApiError(500, 'Failed to fetch user', [error.message]);
   }

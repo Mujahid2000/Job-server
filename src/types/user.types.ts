@@ -4,6 +4,7 @@ const UserTypes = {
     password: String,
     role: String,
     phoneNumber: Number,
+    refreshToken: String,
 }
 
 export default UserTypes;

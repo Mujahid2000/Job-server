@@ -1,9 +1,31 @@
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import mongoose, { Document, Model, ObjectId } from "mongoose";
 
+// Interface for User document properties
+interface IUser {
+    name: string;
+    email: string;
+    password: string;
+    role: string;
+    phoneNumber?: number;
+    refreshToken?: string | undefined;
+}
 
-const userSchema = new mongoose.Schema({
+// Interface for User instance methods
+interface IUserMethods {
+    isPasswordCorrect(password: string): Promise<boolean>;
+    generateAccessToken(): Promise<string>;
+    generateRefreshToken(): Promise<string>;
+}
+
+// Create a type that combines the User document with methods
+type UserDocument = Document & IUser & IUserMethods;
+
+// Create a type for the User model
+type UserModel = Model<IUser, {}, IUserMethods>;
+
+const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
 
     name: {
         type: String,
@@ -45,7 +67,7 @@ userSchema.pre("save", async function () {
 })
 
 
-userSchema.methods.comparePassword = async function (password: any) {
+userSchema.methods.isPasswordCorrect = async function (password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
 }
 
@@ -79,5 +101,4 @@ userSchema.methods.generateRefreshToken = async function () {
 }
 
 
-
-export default mongoose.model('User', userSchema);
+export default mongoose.model<IUser, UserModel>('User', userSchema);
