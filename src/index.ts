@@ -70,7 +70,7 @@ const swaggerOptions = {
         servers: [
             {
                 url: process.env.NODE_ENV === 'production'
-                    ? 'https://your-production-url.com'
+                    ? 'https://job-server-fqvf.onrender.com'
                     : 'http://localhost:5000',
                 description: 'Development server',
             },
