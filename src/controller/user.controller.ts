@@ -44,4 +44,20 @@ const getUserByEmail = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
-export { getAllUsers, loginUser, registerUser, getUserByEmail };
+const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  await userService.forgotPassword(email);
+  res.status(200).json(
+    new ApiResponse(200, null, 'Password reset email sent')
+  );
+});
+
+const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { token, password } = req.body;
+  await userService.resetPassword(token, password);
+  res.status(200).json(
+    new ApiResponse(200, null, 'Password reset successful')
+  );
+});
+
+export { getAllUsers, loginUser, registerUser, getUserByEmail, forgotPassword, resetPassword };

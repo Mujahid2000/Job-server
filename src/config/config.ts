@@ -18,6 +18,10 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
   PAYPAL_CLIENT_ID: z.string().min(1),
   PAYPAL_CLIENT_SECRET: z.string().min(1),
+  EMAIL_HOST: z.string().default('smtp.gmail.com'),
+  EMAIL_PORT: z.string().default('465'),
+  EMAIL_USER: z.string().email().optional(),
+  EMAIL_PASS: z.string().optional(),
 });
 
 const envVars = envSchema.safeParse(process.env);
@@ -51,5 +55,11 @@ export const config = {
   paypal: {
     clientId: envVars.data.PAYPAL_CLIENT_ID,
     clientSecret: envVars.data.PAYPAL_CLIENT_SECRET,
+  },
+  email: {
+    host: envVars.data.EMAIL_HOST,
+    port: parseInt(envVars.data.EMAIL_PORT, 10),
+    user: envVars.data.EMAIL_USER,
+    pass: envVars.data.EMAIL_PASS,
   },
 };

@@ -10,6 +10,8 @@ interface IUser {
     role: string;
     phoneNumber?: number;
     refreshToken?: string | undefined;
+    resetPasswordToken?: string;
+    resetPasswordExpire?: Date;
 }
 
 // Interface for User instance methods
@@ -17,6 +19,7 @@ interface IUserMethods {
     isPasswordCorrect(password: string): Promise<boolean>;
     generateAccessToken(): Promise<string>;
     generateRefreshToken(): Promise<string>;
+    getResetPasswordToken(): string;
 }
 
 // Create a type that combines the User document with methods
@@ -53,6 +56,12 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
     },
     refreshToken: {
         type: String,
+    },
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpire: {
+        type: Date,
     },
 
 }, {
@@ -99,6 +108,19 @@ userSchema.methods.generateRefreshToken = async function () {
         }
     )
 }
+
+userSchema.methods.getResetPasswordToken = function () {
+    const resetToken = jwt.sign(
+        { id: this._id },
+        process.env.SECRET_TOKEN as string,
+        { expiresIn: '15m' }
+    );
+
+    this.resetPasswordToken = resetToken;
+    this.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    return resetToken;
+};
 
 
 export default mongoose.model<IUser, UserModel>('User', userSchema);

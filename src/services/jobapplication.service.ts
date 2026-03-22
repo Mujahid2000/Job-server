@@ -97,6 +97,7 @@ const getAllPostedData = async () => {
 
 const bookmarkJobPost = async (bookmarkData: any) => {
   const { userId, companyId, jobId, email } = bookmarkData;
+  console.log(bookmarkData);
   const existingBookmark = await Bookmark.findOne({ userId, companyId, jobId, email });
   if (existingBookmark) {
     throw new ApiError(400, 'You already bookmarked this job post.');

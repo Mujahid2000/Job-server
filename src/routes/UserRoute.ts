@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { registerUser, loginUser, getUserByEmail, getAllUsers } from '../controller/user.controller';
+import { registerUser, loginUser, getUserByEmail, getAllUsers, forgotPassword, resetPassword } from '../controller/user.controller';
 import validate from '../middleware/validateMiddleware';
 import { userValidation } from '../validations/user.validation';
 
@@ -109,5 +109,58 @@ router.route('/users/:email').get(validate(userValidation.getUserByEmail), getUs
  *         description: Users fetched successfully
  */
 router.route('/users').get(getAllUsers);
+
+/**
+ * @swagger
+ * /user/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ *       404:
+ *         description: User not found
+ */
+router.route('/forgot-password').post(forgotPassword);
+
+/**
+ * @swagger
+ * /user/reset-password:
+ *   post:
+ *     summary: Reset password
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.route('/reset-password').post(resetPassword);
 
 export default router;

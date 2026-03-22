@@ -26,6 +26,7 @@ const getAllPostedData = asyncHandler(async (req: Request, res: Response) => {
 
 const bookmarkJobPost = asyncHandler(async (req: Request, res: Response) => {
   const savedBookmark = await jobApplicationService.bookmarkJobPost(req.body);
+  console.log(savedBookmark);
   res.status(200).json(
     new ApiResponse(200, savedBookmark, 'Bookmark Job Post successfully.')
   );
