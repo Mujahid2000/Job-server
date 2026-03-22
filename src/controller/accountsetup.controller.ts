@@ -17,9 +17,9 @@ const postCompanyData = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const postFounderInfo = asyncHandler(async (req: Request, res: Response) => {
-  console.log("togo maygo cudi",req.body);
+  
   const result = await accountSetupService.postFounderInfo(req.body);
-  console.log("togo maygo cudi",result);
+  
   res.status(201).json(
     new ApiResponse(201, result, 'Founder info saved successfully')
   );
