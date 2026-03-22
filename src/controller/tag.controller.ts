@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import Tag from "../models/TagsSchema";
-import { asyncHandler } from "../utils/AsyncHandler";
+import { tagService } from "../services/tag.service";
 import { ApiResponse } from "../utils/ApiResponse";
-import { ApiError } from "../utils/ApiError";
+import { asyncHandler } from "../utils/AsyncHandler";
 
+const postTag = asyncHandler(async (req: Request, res: Response) => {
+    const { tagName } = req.body;
+    const result = await tagService.postTag(tagName);
+    res.status(201).json(
+        new ApiResponse(201, result, 'Tag saved successfully')
+    );
+});
 
-const tagsController = asyncHandler(async (req: Request, res: Response) => {
-    try {
-        const tagsList = await Tag.find().sort({ createdAt: -1 });
-        res.status(200).json(
-            new ApiResponse(200, tagsList, 'Tags fetched successfully')
-        );
-    } catch (error: any) {
-        console.error('Error fetching tags:', error);
-        throw new ApiError(500, 'Error fetching tags', [error.message]);
-    }
-})
+const getTags = asyncHandler(async (req: Request, res: Response) => {
+    const result = await tagService.getAllTags();
+    res.status(200).json(
+        new ApiResponse(200, result, 'Tags fetched successfully')
+    );
+});
 
-
-export { tagsController }
+export { postTag, getTags };

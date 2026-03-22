@@ -1,7 +1,8 @@
 import express from 'express';
 const router = express.Router();
 import { candidateApplyJobList, candidateFavouriteJobList, candidateList } from '../controller/candidate.controller';
-
+import validate from '../middleware/validateMiddleware';
+import { candidateValidation } from '../validations/candidate.validation';
 
 /**
  * @swagger
@@ -26,7 +27,7 @@ import { candidateApplyJobList, candidateFavouriteJobList, candidateList } from 
  *       200:
  *         description: List of applied jobs fetched
  */
-router.route('/candidateApplyJobList/:userId').get(candidateApplyJobList);
+router.route('/candidateApplyJobList/:userId').get(validate(candidateValidation.getParamsUserId), candidateApplyJobList);
 
 /**
  * @swagger
@@ -44,7 +45,7 @@ router.route('/candidateApplyJobList/:userId').get(candidateApplyJobList);
  *       200:
  *         description: Favorite jobs fetched
  */
-router.route('/candidateFavoriteJobList/:email').get(candidateFavouriteJobList);
+router.route('/candidateFavoriteJobList/:email').get(validate(candidateValidation.getParamsEmail), candidateFavouriteJobList);
 
 /**
  * @swagger

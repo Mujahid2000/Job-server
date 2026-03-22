@@ -1,6 +1,8 @@
 import express from 'express';
 const router = express.Router();
-import { tagsController } from '../controller/tag.controller';
+import { postTag, getTags } from '../controller/tag.controller';
+import validate from '../middleware/validateMiddleware';
+import { tagValidation } from '../validations/tag.validation';
 
 // Mock data for demonstration
 
@@ -9,19 +11,31 @@ import { tagsController } from '../controller/tag.controller';
  * @swagger
  * tags:
  *   name: Tags
- *   description: Job tags management
+ *   description: Management of job tags
  */
 
 /**
  * @swagger
- * /tags/tagsName:
+ * /tags/postTags:
+ *   post:
+ *     summary: Create a new tag
+ *     tags: [Tags]
+ *     responses:
+ *       201:
+ *         description: Tag created successfully
+ */
+router.post('/postTags', validate(tagValidation.postTag), postTag);
+
+/**
+ * @swagger
+ * /tags/getTags:
  *   get:
- *     summary: Get all tag names
+ *     summary: Get all tags
  *     tags: [Tags]
  *     responses:
  *       200:
- *         description: Tags fetched successfully
+ *         description: Tags fetched
  */
-router.route('/tagsName').get(tagsController);
+router.get('/getTags', getTags);
 
 export default router;

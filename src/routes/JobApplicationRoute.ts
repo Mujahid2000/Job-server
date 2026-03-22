@@ -3,6 +3,8 @@ const router = express.Router();
 
 
 import { postJobApplication, postPromotedJobs, getAllPostedData, bookmarkJobPost, getAllUserBookMarkByEmail, getUserAllJobPost, getAllCompanyData, getSingleCompanyData, getSpecificCompanyData } from '../controller/jobapplication.controller';
+import validate from '../middleware/validateMiddleware';
+import { jobApplicationValidation } from '../validations/jobapplication.validation';
 
 /**
  * @swagger
@@ -21,7 +23,7 @@ import { postJobApplication, postPromotedJobs, getAllPostedData, bookmarkJobPost
  *       201:
  *         description: Job posted successfully
  */
-router.route('/jobPost').post(postJobApplication);
+router.route('/jobPost').post(validate(jobApplicationValidation.postJobApplication), postJobApplication);
 
 /**
  * @swagger
@@ -33,7 +35,7 @@ router.route('/jobPost').post(postJobApplication);
  *       201:
  *         description: Promoted job created
  */
-router.route('/PromotedJObs').post(postPromotedJobs)
+router.route('/PromotedJObs').post(validate(jobApplicationValidation.postPromotedJobs), postPromotedJobs)
 
 /**
  * @swagger
@@ -57,7 +59,7 @@ router.route('/getAllPostedData').get(getAllPostedData)
  *       200:
  *         description: Post bookmarked
  */
-router.route('/bookMarkPost').post(bookmarkJobPost);
+router.route('/bookMarkPost').post(validate(jobApplicationValidation.bookmarkJobPost), bookmarkJobPost);
 
 /**
  * @swagger
@@ -75,7 +77,7 @@ router.route('/bookMarkPost').post(bookmarkJobPost);
  *       200:
  *         description: Bookmarks fetched successfully
  */
-router.route('/getBookMark/:email').get(getAllUserBookMarkByEmail)
+router.route('/getBookMark/:email').get(validate(jobApplicationValidation.getParamsEmail), getAllUserBookMarkByEmail)
 
 /**
  * @swagger
@@ -93,7 +95,7 @@ router.route('/getBookMark/:email').get(getAllUserBookMarkByEmail)
  *       200:
  *         description: User's job posts fetched
  */
-router.route('/jobPost/:id').get(getUserAllJobPost);
+router.route('/jobPost/:id').get(validate(jobApplicationValidation.getParamsId), getUserAllJobPost);
 
 /**
  * @swagger
@@ -123,7 +125,7 @@ router.route('/getCompanyData').get(getAllCompanyData);
  *       200:
  *         description: Company data fetched
  */
-router.route('/getSingleCompanyData/:id').get(getSingleCompanyData)
+router.route('/getSingleCompanyData/:id').get(validate(jobApplicationValidation.getParamsId), getSingleCompanyData)
 
 /**
  * @swagger
@@ -141,6 +143,6 @@ router.route('/getSingleCompanyData/:id').get(getSingleCompanyData)
  *       200:
  *         description: Specific company data fetched
  */
-router.route('/getSpecificCompanyData/:companyId').get(getSpecificCompanyData);
+router.route('/getSpecificCompanyData/:companyId').get(validate(jobApplicationValidation.getParamsCompanyId), getSpecificCompanyData);
 
 export default router;

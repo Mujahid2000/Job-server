@@ -5,9 +5,9 @@ import {
   sendNotificationCustomerProfile,
   customerMessageForAdmin,
   adminMessageForCustomer
-} from
-  '../controller/notificationdata.controller';
-
+} from '../controller/notificationdata.controller';
+import validate from '../middleware/validateMiddleware';
+import { notificationValidation } from '../validations/notification.validation';
 
 /**
  * @swagger
@@ -32,7 +32,7 @@ import {
  *       200:
  *         description: Notification data fetched
  */
-router.route('/notificationData/:userId').get(getNotificationData);
+router.route('/notificationData/:userId').get(validate(notificationValidation.getParamsUserId), getNotificationData);
 
 /**
  * @swagger
@@ -50,7 +50,7 @@ router.route('/notificationData/:userId').get(getNotificationData);
  *       200:
  *         description: Notification data fetched
  */
-router.route('/customerProfile/:senderId').get(sendNotificationCustomerProfile);
+router.route('/customerProfile/:senderId').get(validate(notificationValidation.getParamsSenderId), sendNotificationCustomerProfile);
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ router.route('/customerProfile/:senderId').get(sendNotificationCustomerProfile);
  *       200:
  *         description: Customer messages fetched
  */
-router.route('/customerMessageForAdmin/:customerId').get(customerMessageForAdmin)
+router.route('/customerMessageForAdmin/:customerId').get(validate(notificationValidation.getParamsCustomerId), customerMessageForAdmin)
 
 /**
  * @swagger
@@ -80,7 +80,7 @@ router.route('/customerMessageForAdmin/:customerId').get(customerMessageForAdmin
  *       200:
  *         description: Admin messages fetched
  */
-router.route('/adminMessageForCustomer').get(adminMessageForCustomer);
+router.route('/adminMessageForCustomer').get(validate(notificationValidation.getQueryAdminUserId), adminMessageForCustomer);
 
 
 export default router;

@@ -1,39 +1,39 @@
 import express from 'express';
 const router = express.Router();
 import { payparOrderCreate, payparOrderCapture } from '../controller/paypal.controller';
-
-
+import validate from '../middleware/validateMiddleware';
+import { paypalValidation } from '../validations/paypal.validation';
 
 /**
  * @swagger
  * tags:
- *   name: Payments (PayPal)
+ *   name: PayPal
  *   description: PayPal payment integration
  */
 
 /**
  * @swagger
- * /api/paypal/create-order:
+ * /paypal/create-order:
  *   post:
  *     summary: Create a PayPal order
- *     tags: [Payments (PayPal)]
+ *     tags: [PayPal]
  *     responses:
  *       200:
- *         description: PayPal order created
+ *         description: Order created
  */
-router.route('/create-order').post(payparOrderCreate);
+router.post('/create-order', validate(paypalValidation.postPaypalOrderCreate), payparOrderCreate);
 
 /**
  * @swagger
- * /api/paypal/capture-order:
+ * /paypal/capture-order:
  *   post:
  *     summary: Capture a PayPal order
- *     tags: [Payments (PayPal)]
+ *     tags: [PayPal]
  *     responses:
  *       200:
- *         description: PayPal order captured
+ *         description: Order captured
  */
-router.route('/capture-order').post(payparOrderCapture);
+router.post('/capture-order', validate(paypalValidation.postPaypalOrderCapture), payparOrderCapture);
 
 
 export default router;

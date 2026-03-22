@@ -9,6 +9,8 @@ import {
   getCompanyDataForHome,
   getComapnyProfileCompleteData
 } from '../controller/company.controller';
+import validate from '../middleware/validateMiddleware';
+import { companyValidation } from '../validations/company.validation';
 
 /**
  * @swagger
@@ -33,7 +35,7 @@ import {
  *       200:
  *         description: Company data fetched
  */
-router.route('/companyDataById/:id').get(getCompanyData);
+router.route('/companyDataById/:id').get(validate(companyValidation.getParamsId), getCompanyData);
 
 /**
  * @swagger
@@ -51,7 +53,7 @@ router.route('/companyDataById/:id').get(getCompanyData);
  *       200:
  *         description: Company personal data fetched
  */
-router.route('/companyPersonal/:userId').get(getCompanyPersonalData);
+router.route('/companyPersonal/:userId').get(validate(companyValidation.getParamsUserId), getCompanyPersonalData);
 
 /**
  * @swagger
@@ -69,7 +71,7 @@ router.route('/companyPersonal/:userId').get(getCompanyPersonalData);
  *       200:
  *         description: Company profile data fetched
  */
-router.route('/companyProfile/:userId').get(getCompanyProfileData);
+router.route('/companyProfile/:userId').get(validate(companyValidation.getParamsUserId), getCompanyProfileData);
 
 /**
  * @swagger
@@ -87,7 +89,7 @@ router.route('/companyProfile/:userId').get(getCompanyProfileData);
  *       200:
  *         description: Company social links fetched
  */
-router.route('/companySocialLink/:userId').get(getComapnySocialData);
+router.route('/companySocialLink/:userId').get(validate(companyValidation.getParamsUserId), getComapnySocialData);
 
 /**
  * @swagger
@@ -105,7 +107,7 @@ router.route('/companySocialLink/:userId').get(getComapnySocialData);
  *       200:
  *         description: Company contacts fetched
  */
-router.route('/companyContacts/:userId').get(getComapnyContactsData);
+router.route('/companyContacts/:userId').get(validate(companyValidation.getParamsUserId), getComapnyContactsData);
 
 /**
  * @swagger
@@ -135,7 +137,7 @@ router.route('/getCompanyDataForHome').get(getCompanyDataForHome);
  *       200:
  *         description: Completion status fetched
  */
-router.route('/companyProfileComplete/:userId').get(getComapnyProfileCompleteData);
+router.route('/companyProfileComplete/:userId').get(validate(companyValidation.getParamsUserId), getComapnyProfileCompleteData);
 
 
 export default router;

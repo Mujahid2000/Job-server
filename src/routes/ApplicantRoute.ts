@@ -16,6 +16,9 @@ import {
   updatePassword,
   getProfileComplete
 } from '../controller/applicant.controller';
+import validate from '../middleware/validateMiddleware';
+import { applicantValidation } from '../validations/applicant.validation';
+import { jobApplicationValidation } from '../validations/jobapplication.validation';
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -48,7 +51,7 @@ const upload = multer({ storage: storage });
  *       201:
  *         description: Applicant data saved successfully
  */
-router.post('/applicant', upload.single('profilePicture'), postApplicant);
+router.post('/applicant', upload.single('profilePicture'), validate(applicantValidation.postApplicant), postApplicant);
 
 /**
  * @swagger
@@ -66,7 +69,7 @@ router.post('/applicant', upload.single('profilePicture'), postApplicant);
  *       200:
  *         description: Resumes fetched successfully
  */
-router.get('/resumes/:email', getResumesByEmail);
+router.get('/resumes/:email', validate(jobApplicationValidation.getParamsEmail), getResumesByEmail);
 
 /**
  * @swagger
@@ -88,7 +91,7 @@ router.get('/resumes/:email', getResumesByEmail);
  *       200:
  *         description: CV uploaded successfully
  */
-router.post('/uploadCv', upload.single('file'), uploadCv);
+router.post('/uploadCv', upload.single('file'), validate(applicantValidation.uploadCv), uploadCv);
 
 /**
  * @swagger
@@ -106,7 +109,7 @@ router.post('/uploadCv', upload.single('file'), uploadCv);
  *       200:
  *         description: Applicant data found
  */
-router.get('/applicant/:email', getApplicantByEmail);
+router.get('/applicant/:email', validate(jobApplicationValidation.getParamsEmail), getApplicantByEmail);
 
 /**
  * @swagger
@@ -118,7 +121,7 @@ router.get('/applicant/:email', getApplicantByEmail);
  *       200:
  *         description: Personal data updated
  */
-router.post('/personal', postPersonalData);
+router.post('/personal', validate(applicantValidation.postPersonalData), postPersonalData);
 
 /**
  * @swagger
@@ -136,7 +139,7 @@ router.post('/personal', postPersonalData);
  *       200:
  *         description: Notification updated
  */
-router.patch('/updateNotification/:id', updateNotification);
+router.patch('/updateNotification/:id', validate(applicantValidation.updateNotification), updateNotification);
 
 /**
  * @swagger
@@ -154,7 +157,7 @@ router.patch('/updateNotification/:id', updateNotification);
  *       200:
  *         description: Notification data fetched
  */
-router.get('/getNotificationData/:userId', getNotificationData);
+router.get('/getNotificationData/:userId', validate(applicantValidation.getParamsUserId), getNotificationData);
 
 /**
  * @swagger
@@ -172,7 +175,7 @@ router.get('/getNotificationData/:userId', getNotificationData);
  *       200:
  *         description: Job alerts updated
  */
-router.patch('/updateJobAlerts/:userId', updateJobAlerts);
+router.patch('/updateJobAlerts/:userId', validate(applicantValidation.updateJobAlerts), updateJobAlerts);
 
 /**
  * @swagger
@@ -190,7 +193,7 @@ router.patch('/updateJobAlerts/:userId', updateJobAlerts);
  *       200:
  *         description: Job alerts data fetched
  */
-router.get('/getJobAlertsData/:userId', getJobAlertsData);
+router.get('/getJobAlertsData/:userId', validate(applicantValidation.getParamsUserId), getJobAlertsData);
 
 /**
  * @swagger
@@ -208,7 +211,7 @@ router.get('/getJobAlertsData/:userId', getJobAlertsData);
  *       200:
  *         description: Privacy updated
  */
-router.patch('/privacyOnOf/:userId', updatePrivacy);
+router.patch('/privacyOnOf/:userId', validate(applicantValidation.updatePrivacy), updatePrivacy);
 
 /**
  * @swagger
@@ -226,7 +229,7 @@ router.patch('/privacyOnOf/:userId', updatePrivacy);
  *       200:
  *         description: Privacy data fetched
  */
-router.get('/getProfilePrivacyData/:userId', getProfilePrivacyData);
+router.get('/getProfilePrivacyData/:userId', validate(applicantValidation.getParamsUserId), getProfilePrivacyData);
 
 /**
  * @swagger
@@ -244,7 +247,7 @@ router.get('/getProfilePrivacyData/:userId', getProfilePrivacyData);
  *       200:
  *         description: Password updated
  */
-router.patch('/updatePassword/:userId', updatePassword);
+router.patch('/updatePassword/:userId', validate(applicantValidation.updatePassword), updatePassword);
 
 /**
  * @swagger
@@ -262,6 +265,6 @@ router.patch('/updatePassword/:userId', updatePassword);
  *       200:
  *         description: Completion status fetched
  */
-router.get('/profileComplete/:userId', getProfileComplete);
+router.get('/profileComplete/:userId', validate(applicantValidation.getParamsUserId), getProfileComplete);
 
 export default router;

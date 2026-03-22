@@ -1,6 +1,8 @@
 import express from 'express';
 const router = express.Router();
 import { postShortListedData, getShortListedData, getShortListedCandidateDetails, getShortListedCount, postSaveCandidateProfile, getSavedCandidateProfiles, deleteSavedCandidateProfile } from '../controller/shortlisted.controller'
+import validate from '../middleware/validateMiddleware';
+import { shortListedValidation } from '../validations/shortlisted.validation';
 
 /**
  * @swagger
@@ -19,7 +21,7 @@ import { postShortListedData, getShortListedData, getShortListedCandidateDetails
  *       201:
  *         description: Candidate shortlisted
  */
-router.route("/postShortListedData").post(postShortListedData);
+router.route("/postShortListedData").post(validate(shortListedValidation.postShortListedData), postShortListedData);
 
 /**
  * @swagger
@@ -37,7 +39,7 @@ router.route("/postShortListedData").post(postShortListedData);
  *       200:
  *         description: Shortlisted candidates fetched
  */
-router.route("/getShortListedData/:jobId").get(getShortListedData);
+router.route("/getShortListedData/:jobId").get(validate(shortListedValidation.getParamsJobId), getShortListedData);
 
 /**
  * @swagger
@@ -49,7 +51,7 @@ router.route("/getShortListedData/:jobId").get(getShortListedData);
  *       200:
  *         description: Count fetched successfully
  */
-router.route("/getShortListedCount").get(getShortListedCount);
+router.route("/getShortListedCount").get(validate(shortListedValidation.getQueryUserId), getShortListedCount);
 
 /**
  * @swagger
@@ -61,7 +63,7 @@ router.route("/getShortListedCount").get(getShortListedCount);
  *       200:
  *         description: Details fetched successfully
  */
-router.route("/getShortListedCandidateDetails").get(getShortListedCandidateDetails);
+router.route("/getShortListedCandidateDetails").get(validate(shortListedValidation.getQueryUserIdResumeId), getShortListedCandidateDetails);
 
 /**
  * @swagger
@@ -73,7 +75,7 @@ router.route("/getShortListedCandidateDetails").get(getShortListedCandidateDetai
  *       201:
  *         description: Profile saved successfully
  */
-router.route('/postSaveCandidateProfile').post(postSaveCandidateProfile);
+router.route('/postSaveCandidateProfile').post(validate(shortListedValidation.postSaveCandidateProfile), postSaveCandidateProfile);
 
 /**
  * @swagger
@@ -91,7 +93,7 @@ router.route('/postSaveCandidateProfile').post(postSaveCandidateProfile);
  *       200:
  *         description: Saved profiles fetched
  */
-router.route('/getSavedCandidateProfiles/:userId').get(getSavedCandidateProfiles);
+router.route('/getSavedCandidateProfiles/:userId').get(validate(shortListedValidation.getParamsUserId), getSavedCandidateProfiles);
 
 /**
  * @swagger
@@ -109,7 +111,7 @@ router.route('/getSavedCandidateProfiles/:userId').get(getSavedCandidateProfiles
  *       200:
  *         description: Profile deleted
  */
-router.route('/deleteSavedCandidateProfile/:id').delete(deleteSavedCandidateProfile);
+router.route('/deleteSavedCandidateProfile/:id').delete(validate(shortListedValidation.getParamsId), deleteSavedCandidateProfile);
 
 
 export default router;

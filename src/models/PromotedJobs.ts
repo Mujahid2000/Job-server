@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const promotedSchema = new mongoose.Schema({
     userId: String,
-    jobId: String,
+    jobId: { type: String, index: true },
     companyId: String,
     promotedSystem: String
 })

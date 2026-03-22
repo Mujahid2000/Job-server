@@ -26,5 +26,5 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-// ✅ Correct export
+
 export default verifyToken;

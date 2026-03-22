@@ -23,11 +23,12 @@ import SubscriptionRoutes from './routes/SubscriptionData';
 import Tags from './routes/TagsRoute';
 import user from './routes/UserRoute';
 import { errorMiddleware } from './middleware/errorMiddleware';
+import { config } from './config/config';
+import { logger } from './utils/logger';
 
-// Load environment variables
-dotenv.config();
-const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || '']
+// CORS setup
+const allowedOrigins = config.env === 'production'
+    ? [config.frontendUrl || '']
     : ['http://localhost:3000', 'https://my-job-brown.vercel.app'];
 
 // Initialize Express app
@@ -69,10 +70,10 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: process.env.NODE_ENV === 'production'
+                url: config.env === 'production'
                     ? 'https://job-server-fqvf.onrender.com'
-                    : 'http://localhost:5000',
-                description: 'Development server',
+                    : `http://localhost:${config.port}`,
+                description: 'Server',
             },
         ],
         components: {
@@ -110,49 +111,49 @@ app.use('/candidateJobApplyData', candidateRoute);
 app.use('/liveNotification', liveNotification);
 app.use('/notification', notificationData);
 app.use('/jwt', jwtMiddleware);
-
+app.use((req, res) => res.status(404).json({ error: 'Not Found' }))
 app.use(errorMiddleware);
 
 // Socket.IO connection
 io.on('connection', (socket) => {
-    console.log(`a user connected ${socket.id}`);
+    logger.info(`a user connected ${socket.id}`);
 
     // Join user to their own room based on userId
     socket.on('join', (userId) => {
         if (userId) {
             socket.join(userId);
-            console.log(`User ${userId} joined their room`);
+            logger.info(`User ${userId} joined their room`);
         }
     });
 
     socket.on('disconnect', () => {
-        console.log(`user disconnected ${socket.id}`);
+        logger.info(`user disconnected ${socket.id}`);
     });
 });
 
 // Server setup
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 const startServer = async () => {
     try {
         await connectMongoDB();
         await connectPostgreSQL();
         server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            logger.info(`Server running on port ${PORT}`);
         });
     } catch (error) {
-        console.error('Server startup error:', error);
+        logger.error('Server startup error:', error);
         process.exit(1);
     }
 };
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-    console.log('SIGTERM signal received: closing HTTP server');
+    logger.info('SIGTERM signal received: closing HTTP server');
     await pool.end();
     await mongoose.connection.close();
     server.close(() => {
-        console.log('HTTP server closed');
+        logger.info('HTTP server closed');
         process.exit(0);
     });
 });

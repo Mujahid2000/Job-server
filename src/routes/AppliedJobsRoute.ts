@@ -1,6 +1,9 @@
 import express from 'express';
 const router = express.Router();
 import { postJobAppliced, getUserJobPostData, getJobDataWithCount, getJobApplicantData, getApplicantDetails } from '../controller/appliedjobs.controller';
+import validate from '../middleware/validateMiddleware';
+import { appliedJobsValidation } from '../validations/appliedjobs.validation';
+
 /**
  * @swagger
  * tags:
@@ -18,7 +21,7 @@ import { postJobAppliced, getUserJobPostData, getJobDataWithCount, getJobApplica
  *       201:
  *         description: Job application submitted
  */
-router.route('/jobAppliedJobPost').post(postJobAppliced);
+router.route('/jobAppliedJobPost').post(validate(appliedJobsValidation.postJobAppliced), postJobAppliced);
 
 /**
  * @swagger
@@ -36,7 +39,7 @@ router.route('/jobAppliedJobPost').post(postJobAppliced);
  *       200:
  *         description: User's applications fetched
  */
-router.route("/getUserJobPostData/:userId").get(getUserJobPostData);
+router.route("/getUserJobPostData/:userId").get(validate(appliedJobsValidation.getParamsUserId), getUserJobPostData);
 
 /**
  * @swagger
@@ -66,7 +69,7 @@ router.route('/getJobDataWithJobCount').get(getJobDataWithCount);
  *       200:
  *         description: Applicants fetched for the job
  */
-router.route('/getJobApplicantData/:jobId').get(getJobApplicantData);
+router.route('/getJobApplicantData/:jobId').get(validate(appliedJobsValidation.getParamsJobId), getJobApplicantData);
 
 /**
  * @swagger
@@ -78,6 +81,6 @@ router.route('/getJobApplicantData/:jobId').get(getJobApplicantData);
  *       200:
  *         description: Applicant details fetched
  */
-router.route('/getApplicantDetails').get(getApplicantDetails);
+router.route('/getApplicantDetails').get(validate(appliedJobsValidation.getApplicantDetails), getApplicantDetails);
 
 export default router;

@@ -1,6 +1,8 @@
 import express from 'express';
 const router = express.Router();
 import { sendNotification, customerMessage } from '../controller/livenotification.controller';
+import validate from '../middleware/validateMiddleware';
+import { notificationValidation } from '../validations/notification.validation';
 
 /**
  * @swagger
@@ -19,7 +21,7 @@ import { sendNotification, customerMessage } from '../controller/livenotificatio
  *       200:
  *         description: Notification sent
  */
-router.post('/send', (req, res, next) => {
+router.post('/send', validate(notificationValidation.postNotification), (req, res, next) => {
   req.body.type = 'shortlist';
   sendNotification(req, res, next);
 });
@@ -34,7 +36,7 @@ router.post('/send', (req, res, next) => {
  *       200:
  *         description: Notification sent
  */
-router.post('/sendSavedProfile', (req, res, next) => {
+router.post('/sendSavedProfile', validate(notificationValidation.postNotification), (req, res, next) => {
   req.body.type = 'savedProfile';
   sendNotification(req, res, next);
 });
@@ -49,6 +51,6 @@ router.post('/sendSavedProfile', (req, res, next) => {
  *       200:
  *         description: Message sent
  */
-router.post('/customerMessage', customerMessage);
+router.post('/customerMessage', validate(notificationValidation.postCustomerMessage), customerMessage);
 
 export default router;

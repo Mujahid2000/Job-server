@@ -1,7 +1,9 @@
 import express from 'express';
 const router = express.Router();
 import { getSubscriptionDataByEmail, getSubscriptionDataById } from '../controller/subscription.controller';
-
+import validate from '../middleware/validateMiddleware';
+import { subscriptionValidation } from '../validations/subscription.validation';
+import { jobApplicationValidation } from '../validations/jobapplication.validation';
 
 /**
  * @swagger
@@ -26,7 +28,7 @@ import { getSubscriptionDataByEmail, getSubscriptionDataById } from '../controll
  *       200:
  *         description: Subscription data fetched
  */
-router.route('/subscriptions/:email').get(getSubscriptionDataByEmail);
+router.route('/subscriptions/:email').get(validate(jobApplicationValidation.getParamsEmail), getSubscriptionDataByEmail);
 
 /**
  * @swagger
@@ -44,7 +46,7 @@ router.route('/subscriptions/:email').get(getSubscriptionDataByEmail);
  *       200:
  *         description: Subscription data fetched
  */
-router.route('/subscription/:id').get(getSubscriptionDataById);
+router.route('/subscription/:id').get(validate(subscriptionValidation.getParamsId), getSubscriptionDataById);
 
 
 export default router;

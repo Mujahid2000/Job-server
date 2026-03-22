@@ -2,12 +2,15 @@ import express from 'express';
 const router = express.Router();
 import multer from 'multer';
 import {
-    postCompanyInfo,
+    postCompanyData,
     postFounderInfo,
     postSocialMediaInfo,
     postContactInfo,
     getContactData
 } from '../controller/accountsetup.controller';
+import validate from '../middleware/validateMiddleware';
+import { accountSetupValidation } from '../validations/accountsetup.validation';
+import { jobApplicationValidation } from '../validations/jobapplication.validation';
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -43,7 +46,7 @@ const upload = multer({ storage: storage });
  *       200:
  *         description: Company info saved successfully
  */
-router.post('/companyInfo', upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), postCompanyInfo);
+router.post('/companyInfo', upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'banner', maxCount: 1 }]), validate(accountSetupValidation.postCompanyData), postCompanyData);
 
 /**
  * @swagger
@@ -55,7 +58,7 @@ router.post('/companyInfo', upload.fields([{ name: 'logo', maxCount: 1 }, { name
  *       200:
  *         description: Founder info saved
  */
-router.post('/founderInfo', postFounderInfo);
+router.post('/founderInfo', validate(accountSetupValidation.postFounderInfo), postFounderInfo);
 
 /**
  * @swagger
@@ -67,7 +70,7 @@ router.post('/founderInfo', postFounderInfo);
  *       200:
  *         description: Social media info saved
  */
-router.post('/socialMediaInfo', postSocialMediaInfo);
+router.post('/socialMediaInfo', validate(accountSetupValidation.postSocialMedia), postSocialMediaInfo);
 
 /**
  * @swagger
@@ -79,7 +82,7 @@ router.post('/socialMediaInfo', postSocialMediaInfo);
  *       200:
  *         description: Contact info saved
  */
-router.post('/contactInfo', postContactInfo);
+router.post('/contactInfo', validate(accountSetupValidation.postContactInfo), postContactInfo);
 
 /**
  * @swagger
@@ -99,6 +102,6 @@ router.post('/contactInfo', postContactInfo);
  *       404:
  *         description: Not found
  */
-router.get('/getContactData/:email', getContactData);
+router.get('/getContactData/:email', validate(jobApplicationValidation.getParamsEmail), getContactData);
 
 export default router;

@@ -1,7 +1,8 @@
 import express from 'express';
 const router = express.Router();
 import { registerUser, loginUser, getUserByEmail, getAllUsers } from '../controller/user.controller';
-
+import validate from '../middleware/validateMiddleware';
+import { userValidation } from '../validations/user.validation';
 
 /**
  * @swagger
@@ -45,7 +46,7 @@ import { registerUser, loginUser, getUserByEmail, getAllUsers } from '../control
  *       400:
  *         description: Missing fields or user already exists
  */
-router.route('/userReg').post(registerUser);
+router.route('/userReg').post(validate(userValidation.registerUser), registerUser);
 
 /**
  * @swagger
@@ -75,7 +76,7 @@ router.route('/userReg').post(registerUser);
  *       404:
  *         description: Email not found
  */
-router.route('/login').post(loginUser);
+router.route('/login').post(validate(userValidation.loginUser), loginUser);
 
 /**
  * @swagger
@@ -95,7 +96,7 @@ router.route('/login').post(loginUser);
  *       404:
  *         description: User not found
  */
-router.route('/users/:email').get(getUserByEmail);
+router.route('/users/:email').get(validate(userValidation.getUserByEmail), getUserByEmail);
 
 /**
  * @swagger

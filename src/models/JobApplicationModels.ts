@@ -8,7 +8,8 @@ const JobPostingSchema = new Schema(
         userId: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            index: true
         },
         companyId: {
             type: String,
