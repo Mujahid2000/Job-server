@@ -28,6 +28,7 @@ const postCompanyData = async (companyData: any, files: { [fieldname: string]: E
 };
 
 const postFounderInfo = async (founderData: any) => {
+  console.log(founderData);
   const newFounder = new FounderInfoSchema(founderData);
   return await newFounder.save();
 };
