@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/AsyncHandler";
 
 const payparOrderCreate = asyncHandler(async (req: Request, res: Response) => {
+    console.log("create order", req.body);
     const result = await paypalService.createOrder(req.body);
     res.status(200).json(
         new ApiResponse(200, result, 'Order created successfully')
@@ -11,6 +12,7 @@ const payparOrderCreate = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const payparOrderCapture = asyncHandler(async (req: Request, res: Response) => {
+    console.log("capture order", req.body);
     const result = await paypalService.captureOrder(req.body);
     res.status(200).json(
         new ApiResponse(200, result, 'Order captured and payment saved successfully')

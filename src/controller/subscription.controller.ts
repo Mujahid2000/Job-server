@@ -14,6 +14,7 @@ const getSubscriptionDataByEmail = asyncHandler(async (req: Request, res: Respon
 const getSubscriptionDataById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await subscriptionService.getSubscriptionDataById(id as string);
+    console.log("result", result);
     res.status(200).json(
         new ApiResponse(200, result, 'Payment fetched successfully')
     );
