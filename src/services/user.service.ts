@@ -143,11 +143,16 @@ const getAllUsers = async () => {
 };
 
 const getUserByEmail = async (email: string) => {
-  const user = await UserSchema.findOne({ email });
+  // Exclude sensitive fields when returning user info
+  const user = await UserSchema.findOne({ email }).select('-password -refreshToken');
   if (!user) {
     throw new ApiError(404, 'User not found');
   }
-  return user;
+  // Convert to plain object to be safe and remove any remaining sensitive fields
+  const userObj: any = user.toObject ? user.toObject() : user;
+  if (userObj.password) delete userObj.password;
+  if (userObj.refreshToken) delete userObj.refreshToken;
+  return userObj;
 };
 
 const forgotPassword = async (email: string) => {

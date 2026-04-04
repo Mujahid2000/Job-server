@@ -2,6 +2,8 @@ import express from 'express';
 const router = express.Router();
 import { registerUser, loginUser, getUserByEmail, getAllUsers, forgotPassword, resetPassword } from '../controller/user.controller';
 import validate from '../middleware/validateMiddleware';
+import verifyToken from '../middleware/VerificationMiddleware';
+import allowAdmin from '../middleware/allowAdmin';
 import { userValidation } from '../validations/user.validation';
 
 /**
@@ -96,7 +98,7 @@ router.route('/login').post(validate(userValidation.loginUser), loginUser);
  *       404:
  *         description: User not found
  */
-router.route('/users/:email').get(validate(userValidation.getUserByEmail), getUserByEmail);
+router.route('/users/:email').get(verifyToken, validate(userValidation.getUserByEmail), getUserByEmail);
 
 /**
  * @swagger
@@ -108,7 +110,7 @@ router.route('/users/:email').get(validate(userValidation.getUserByEmail), getUs
  *       200:
  *         description: Users fetched successfully
  */
-router.route('/users').get(getAllUsers);
+router.route('/users').get(verifyToken, allowAdmin, getAllUsers);
 
 /**
  * @swagger
