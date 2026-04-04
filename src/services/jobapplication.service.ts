@@ -278,7 +278,7 @@ const getAllCompanyData = async () => {
     },
     {
       $project: {
-        _id: 0,
+        _id: 1,
         companyName: 1,
         logo: 1,
         location: 1,
