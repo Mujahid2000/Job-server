@@ -21,6 +21,7 @@ const sendNotification = asyncHandler(async (req: Request, res: Response) => {
 
 const customerMessage = asyncHandler(async (req: Request, res: Response) => {
     const { io }: any = req;
+    console.log(req)
     const msgData = await notificationService.customerMessage(req.body, io);
 
     res.status(200).json(

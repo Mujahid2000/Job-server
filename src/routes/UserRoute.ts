@@ -135,7 +135,7 @@ router.route('/users').get(verifyToken, allowAdmin, getAllUsers);
  *       404:
  *         description: User not found
  */
-router.route('/forgot-password').post(forgotPassword);
+router.route('/forgot-password').post(verifyToken, forgotPassword);
 
 /**
  * @swagger
@@ -163,6 +163,6 @@ router.route('/forgot-password').post(forgotPassword);
  *       400:
  *         description: Invalid or expired token
  */
-router.route('/reset-password').post(resetPassword);
+router.route('/reset-password').post(verifyToken, resetPassword);
 
 export default router;

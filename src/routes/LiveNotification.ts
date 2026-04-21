@@ -3,6 +3,7 @@ const router = express.Router();
 import { sendNotification, customerMessage } from '../controller/livenotification.controller';
 import validate from '../middleware/validateMiddleware';
 import { notificationValidation } from '../validations/notification.validation';
+import verifyToken from '../middleware/VerificationMiddleware';
 
 /**
  * @swagger
@@ -51,6 +52,6 @@ router.post('/sendSavedProfile', validate(notificationValidation.postNotificatio
  *       200:
  *         description: Message sent
  */
-router.post('/customerMessage', validate(notificationValidation.postCustomerMessage), customerMessage);
+router.post('/customerMessage', verifyToken, validate(notificationValidation.postCustomerMessage), customerMessage);
 
 export default router;
