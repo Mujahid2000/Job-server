@@ -47,7 +47,7 @@ const getNotificationData = async (userId: string) => {
 };
 
 const getCustomerProfilesForAdmin = async (senderId: string) => {
-    const HARD_CODED_ID = '6825e7123d8cff36ca7afe9b';
+    const HARD_CODED_ID = '69c015484aa82ad8094f5115';
     if (senderId !== HARD_CODED_ID) {
         throw new ApiError(403, 'Unauthorized: Sender ID does not match');
     }
@@ -133,10 +133,11 @@ const sendNotification = async (notificationData: any, io: any) => {
 };
 
 const customerMessage = async (msgDataBody: any, io: any) => {
-    const { senderId, name, email, receiverId } = msgDataBody;
+    const { _id, createdAt, updatedAt, __v, ...safeMsgBody } = msgDataBody;
+    const { senderId, name, email, receiverId } = safeMsgBody;
 
     const msgData = {
-        ...msgDataBody,
+        ...safeMsgBody,
         dateWithTime: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" })
     };
 
