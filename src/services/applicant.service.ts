@@ -9,19 +9,32 @@ import { Types } from "mongoose";
 import { cloudinaryUploadBuffer } from "../utils/FileUploader";
 import { ApiError } from "../utils/ApiError";
 
-const postApplicant = async (applicantData: any, file: Express.Multer.File) => {
-  const uploadResult: any = await cloudinaryUploadBuffer(
-    file.buffer,
-    file.mimetype,
-    'image'
+const postApplicant = async (applicantData: any, file?: Express.Multer.File) => {
+  const { userId, profilePicture: existingPicture } = applicantData;
+  let profilePictureUrl = existingPicture || '';
+
+  if (file) {
+    const uploadResult: any = await cloudinaryUploadBuffer(
+      file.buffer,
+      file.mimetype,
+      'image'
+    );
+    profilePictureUrl = uploadResult.secure_url;
+  }
+
+  const updateData = {
+    ...applicantData,
+    profilePicture: profilePictureUrl,
+  };
+  delete updateData.userId;
+
+  const applicant = await ApplicantModel.findOneAndUpdate(
+    { userId },
+    { $set: updateData },
+    { upsert: true, new: true, runValidators: true }
   );
 
-  const newApplicant = new ApplicantModel({
-    ...applicantData,
-    profilePicture: uploadResult.secure_url,
-  });
-
-  return await newApplicant.save();
+  return applicant;
 };
 
 const getResumesByEmail = async (email: string) => {
@@ -56,8 +69,13 @@ const getApplicantByEmail = async (email: string) => {
 };
 
 const postPersonalData = async (personalData: any) => {
-  const applicantPersonalData = new CandidatePersonalDataSchema(personalData);
-  return await applicantPersonalData.save();
+  const { userId, email } = personalData;
+  const applicantPersonalData = await CandidatePersonalDataSchema.findOneAndUpdate(
+    { $or: [{ userId }, { email }] },
+    { $set: personalData },
+    { upsert: true, new: true, runValidators: true }
+  );
+  return applicantPersonalData;
 };
 
 const updateNotification = async (userId: string, updateData: any) => {

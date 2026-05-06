@@ -34,13 +34,23 @@ const postFounderInfo = async (founderData: any) => {
 };
 
 const postContactInfo = async (contactData: any) => {
-  const newContact = new ContactInfoSchema(contactData);
-  return await newContact.save();
+  const { email, userId } = contactData;
+  const newContact = await ContactInfoSchema.findOneAndUpdate(
+    { $or: [{ email }, { userId }] },
+    { $set: contactData },
+    { upsert: true, new: true, runValidators: true }
+  );
+  return newContact;
 };
 
 const postSocialMediaInfo = async (socialData: any) => {
-  const newSocial = new SocialMediaInfoSchema(socialData);
-  return await newSocial.save();
+  const { userId, socialLinks } = socialData;
+  const newSocial = await SocialMediaInfoSchema.findOneAndUpdate(
+    { userId },
+    { $set: { userId, socialLinks } },
+    { upsert: true, new: true, runValidators: true }
+  );
+  return newSocial;
 };
 
 const getContactData = async (email: string) => {

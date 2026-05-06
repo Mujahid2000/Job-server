@@ -5,12 +5,9 @@ import { asyncHandler } from "../utils/AsyncHandler";
 import { ApiError } from "../utils/ApiError";
 
 const postApplicant = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.file) {
-    throw new ApiError(400, 'Profile picture is required');
-  }
   const applicant = await applicantService.postApplicant(req.body, req.file);
-  res.status(201).json(
-    new ApiResponse(201, applicant, 'Applicant created successfully')
+  res.status(200).json(
+    new ApiResponse(200, applicant, 'Applicant data saved successfully')
   );
 });
 
@@ -41,8 +38,8 @@ const getApplicantByEmail = asyncHandler(async (req: Request, res: Response) => 
 
 const postPersonalData = asyncHandler(async (req: Request, res: Response) => {
   const data = await applicantService.postPersonalData(req.body);
-  res.status(201).json(
-    new ApiResponse(201, data, 'Personal data inserted successfully')
+  res.status(200).json(
+    new ApiResponse(200, data, 'Personal data saved successfully')
   );
 });
 
